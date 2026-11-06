@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TennisTeam — клуб настольного тенниса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700&family=Unbounded:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F5F8;--card:#fff;--ink:#0E2238;--mute:#5B6B7D;--table:#14509C;--table2:#0F3F7E;--ball:#FF7A1A;--line:#DCE3EA;--ok:#1E8E5A;--r:14px;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0B1624;--card:#13243A;--ink:#EAF0F6;--mute:#93A3B5;--line:#223650;--table:#1B63BE;color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Onest,system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+h1,h2,h3{font-family:Unbounded,Onest,sans-serif;line-height:1.15;margin:0}
+h2{font-size:1.5rem;margin-bottom:.4rem}
+a{color:var(--table)}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
+.bar{max-width:960px;margin:auto;display:flex;align-items:center;gap:1rem;padding:.6rem 1rem}
+.logo{font-family:Unbounded,sans-serif;font-weight:800;text-decoration:none;color:var(--ink);white-space:nowrap}
+.logo i{display:inline-block;width:.8em;height:.8em;border-radius:50%;background:var(--ball);margin-right:.35em}
+nav{display:flex;gap:.25rem;overflow-x:auto;scrollbar-width:none}
+nav a{padding:.4rem .75rem;border-radius:99px;text-decoration:none;color:var(--mute);white-space:nowrap;font-weight:500}
+nav a.on{background:var(--ink);color:var(--bg)}
+nav a:focus-visible,.btn:focus-visible,summary:focus-visible{outline:3px solid var(--ball);outline-offset:2px}
+main{max-width:960px;margin:auto;padding:1rem 1rem 4rem}
+.sub{color:var(--mute);margin:0 0 1.2rem}
+.hero{position:relative;background:var(--table);border-radius:var(--r);padding:2.2rem 1.4rem 2rem;color:#fff;overflow:hidden;margin-bottom:1.2rem;box-shadow:inset 0 0 0 6px var(--table2)}
+.hero:before{content:"";position:absolute;left:0;right:0;top:50%;height:3px;background:rgba(255,255,255,.85)}
+.hero:after{content:"";position:absolute;top:0;bottom:0;left:50%;width:6px;margin-left:-3px;background:rgba(255,255,255,.2)}
+.hero>*{position:relative;z-index:1}
+.hero h1{font-size:clamp(2rem,8vw,3.6rem);font-weight:800;background:var(--table);display:inline-block;padding:0 .4rem;margin-left:-.4rem}
+.hero p{max-width:30ch;font-size:1.1rem;background:var(--table);padding:.2rem .4rem;margin:.8rem 0 1.2rem -.4rem}
+.ball{position:absolute!important;right:12%;top:18%;width:34px;height:34px;border-radius:50%;background:var(--ball);box-shadow:0 14px 0 -6px rgba(0,0,0,.25);animation:bounce 1.6s ease-in-out infinite alternate;z-index:2}
+@keyframes bounce{to{transform:translate(-40px,60px)}}
+@media (prefers-reduced-motion:reduce){.ball{animation:none}}
+.btn{display:inline-block;background:var(--ball);color:#1b1000;font-weight:700;text-decoration:none;padding:.7rem 1.1rem;border-radius:99px}
+.btn.alt{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor}
+.grid{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1rem}
+.card h3{font-size:1rem;margin-bottom:.3rem}
+.tag{display:inline-block;font-size:.8rem;font-weight:700;padding:.1rem .55rem;border-radius:99px;background:var(--line);color:var(--ink)}
+.tag.up{background:var(--ball);color:#1b1000}.tag.done{background:var(--ok);color:#fff}
+.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:480px}
+th,td{padding:.65rem .8rem;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--mute);font-weight:500;font-size:.9rem}
+tr:last-child td{border-bottom:0}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.av{position:relative;width:64px;height:64px;border-radius:50%;background:var(--table);color:#fff;display:grid;place-items:center;font-family:Unbounded,sans-serif;font-weight:600;overflow:hidden;flex:none}
+.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.av.s{width:36px;height:36px;font-size:.75rem}
+.who{display:flex;gap:.8rem;align-items:center}
+.pl{display:flex;gap:.8rem;align-items:center}
+.big{font-family:Unbounded,sans-serif;font-size:1.5rem;font-weight:800}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:.15rem .8rem;margin:.7rem 0;font-size:.92rem}
+.kv dt{color:var(--mute)}.kv dd{margin:0}
+summary{cursor:pointer;color:var(--table);font-weight:500;margin-top:.5rem}
+.m{display:flex;justify-content:space-between;gap:.5rem;padding:.3rem 0;border-bottom:1px dashed var(--line);font-size:.9rem}
+.w{color:var(--ok);font-weight:700}.l{color:#C0392B;font-weight:700}
+.note{font-size:.85rem;color:var(--mute);margin-top:1rem}
+</style>
+</head>
+<body>
+<header><div class="bar">
+<a class="logo" href="#home"><i></i>TennisTeam</a>
+<nav id="nav"></nav>
+</div></header>
+<main id="app"></main>
+
+<script>
+/* ====== ЗДЕСЬ МЕНЯЕТСЯ ВСЁ СОДЕРЖИМОЕ САЙТА (сейчас — примеры) ====== */
+const DATA = {
+  club: { tg: "https://t.me/your_username", phone: "+380 00 000 00 00", addr: "Запорожье, ул. Примерная, 1", hours: "Ежедневно 10:00–22:00" },
+  schedule: [
+    { day: "Пн, Ср", time: "18:00–19:30", group: "Начинающие (дети 7–12)", coach: "Тренер 1" },
+    { day: "Вт, Чт", time: "18:00–19:30", group: "Продолжающие", coach: "Тренер 2" },
+    { day: "Вт, Чт", time: "19:30–21:00", group: "Взрослые", coach: "Тренер 2" },
+    { day: "Сб", time: "11:00–13:00", group: "Свободная игра", coach: "—" }
+  ],
+  rent: [
+    { name: "Стол, 1 час", price: "100 ₴" },
+    { name: "Стол, 10 часов (абонемент)", price: "800 ₴" },
+    { name: "Ракетка и мячи, 1 час", price: "30 ₴" },
+    { name: "Групповая тренировка (разово)", price: "120 ₴" }
+  ],
+  players: [
+    { id: "ivan", name: "Иван Петров", photo: "photos/ivan.jpg", age: 24, hand: "Правая", grip: "Перо", since: 2021, bio: "Агрессивный стиль, сильный топспин справа." },
+    { id: "anna", name: "Анна Коваль", photo: "photos/anna.jpg", age: 19, hand: "Левая", grip: "Шейкхэнд", since: 2022, bio: "Любит длинные розыгрыши и защиту." },
+    { id: "max", name: "Максим Лис", photo: "photos/max.jpg", age: 31, hand: "Правая", grip: "Шейкхэнд", since: 2020, bio: "Чемпион клуба 2025." },
+    { id: "olga", name: "Ольга Шевчук", photo: "photos/olga.jpg", age: 16, hand: "Правая", grip: "Шейкхэнд", since: 2023, bio: "Быстро прогрессирует." }
+  ],
+  tournaments: [
+    { name: "Осенний кубок клуба", date: "2026-10-12", place: "Зал TennisTeam", status: "done", winner: "max" },
+    { name: "Турнир новичков", date: "2026-11-23", place: "Зал TennisTeam", status: "up", info: "Запись до 20 ноября в Telegram." },
+    { name: "Новогодний турнир", date: "2026-12-27", place: "Зал TennisTeam", status: "up", info: "Открытый, для всех уровней." }
+  ],
+  /* Матчи: дата, игрок A, игрок B, счёт по партиям, название турнира (необязательно) */
+  matches: [
+    { d: "2026-09-05", a: "ivan", b: "anna", sa: 3, sb: 1 },
+    { d: "2026-09-12", a: "max", b: "olga", sa: 3, sb: 0 },
+    { d: "2026-10-12", a: "max", b: "ivan", sa: 3, sb: 2, t: "Осенний кубок" },
+    { d: "2026-10-12", a: "anna", b: "olga", sa: 3, sb: 2, t: "Осенний кубок" },
+    { d: "2026-10-19", a: "olga", b: "ivan", sa: 1, sb: 3 }
+  ]
+};
+const START = 1000, K = 32;
+/* ====== КОНЕЦ НАСТРОЕК ====== */
+
+const P = Object.fromEntries(DATA.players.map(p => [p.id, { ...p, r: START, w: 0, l: 0, h: [] }]));
+[...DATA.matches].sort((x, y) => x.d.localeCompare(y.d)).forEach(m => {
+  const a = P[m.a], b = P[m.b], ea = 1 / (1 + Math.pow(10, (b.r - a.r) / 400)), s = m.sa > m.sb ? 1 : 0;
+  a.r += K * (s - ea); b.r -= K * (s - ea);
+  (s ? (a.w++, b.l++) : (b.w++, a.l++));
+  a.h.push({ d: m.d, o: b.id, f: m.sa, g: m.sb, win: !!s });
+  b.h.push({ d: m.d, o: a.id, f: m.sb, g: m.sa, win: !s });
+});
+const ranked = Object.values(P).sort((x, y) => y.r - x.r);
+const fmt = d => new Date(d).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+const ini = n => n.split(" ").map(x => x[0]).join("");
+const av = (p, c = "") => `<div class="av ${c}"><span>${ini(p.name)}</span><img src="${p.photo}" alt="${p.name}" loading="lazy" onerror="this.remove()"></div>`;
+
+const views = {
+  home: () => `
+    <section class="hero">
+      <span class="ball" aria-hidden="true"></span>
+      <h1>TennisTeam</h1>
+      <p>Клуб настольного тенниса. Тренировки, аренда столов, турниры.</p>
+      <a class="btn" href="#schedule">Расписание</a> <a class="btn alt" href="${DATA.club.tg}">Написать в Telegram</a>
+    </section>
+    <div class="grid">
+      <div class="card"><h3>Адрес</h3>${DATA.club.addr}<br>${DATA.club.hours}</div>
+      <div class="card"><h3>Телефон</h3><a href="tel:${DATA.club.phone.replace(/\s/g, "")}">${DATA.club.phone}</a></div>
+      <div class="card"><h3>Лидер рейтинга</h3><div class="who">${av(ranked[0], "s")}<div><b>${ranked[0].name}</b><br>${Math.round(ranked[0].r)}</div></div></div>
+      <div class="card"><h3>Ближайший турнир</h3>${(() => { const t = DATA.tournaments.find(t => t.status === "up"); return t ? `<b>${t.name}</b><br>${fmt(t.date)}` : "Скоро анонс"; })()}</div>
+    </div>`,
+  schedule: () => `
+    <h2>Тренировки</h2><p class="sub">Запись на пробное занятие — в Telegram.</p>
+    <div class="scroll"><table><tr><th>Дни</th><th>Время</th><th>Группа</th><th>Тренер</th></tr>
+    ${DATA.schedule.map(s => `<tr><td>${s.day}</td><td>${s.time}</td><td>${s.group}</td><td>${s.coach}</td></tr>`).join("")}</table></div>`,
+  rent: () => `
+    <h2>Аренда столов</h2><p class="sub">Работаем: ${DATA.club.hours}. Бронь за день до игры.</p>
+    <div class="scroll"><table><tr><th>Услуга</th><th class="n">Цена</th></tr>
+    ${DATA.rent.map(r => `<tr><td>${r.name}</td><td class="n">${r.price}</td></tr>`).join("")}</table></div>
+    <p><a class="btn" href="${DATA.club.tg}">Забронировать стол</a></p>`,
+  tournaments: () => `
+    <h2>Турниры</h2><p class="sub">Результаты идут в рейтинг игроков.</p>
+    <div class="grid">${DATA.tournaments.map(t => `
+      <div class="card"><span class="tag ${t.status}">${t.status === "up" ? "Скоро" : "Завершён"}</span>
+      <h3 style="margin-top:.5rem">${t.name}</h3>${fmt(t.date)}<br>${t.place}
+      <p class="note">${t.status === "done" && P[t.winner] ? "Победитель: <b>" + P[t.winner].name + "</b>" : (t.info || "")}</p></div>`).join("")}</div>`,
+  rating: () => `
+    <h2>Рейтинг клуба</h2><p class="sub">Система Elo: все начинают с ${START}. Победа над сильным соперником даёт больше очков.</p>
+    <div class="scroll"><table><tr><th>#</th><th>Игрок</th><th class="n">Игры</th><th class="n">В–П</th><th class="n">Рейтинг</th></tr>
+    ${ranked.map((p, i) => `<tr><td>${i + 1}</td><td><a href="#players" style="text-decoration:none;color:inherit"><span class="pl">${av(p, "s")}${p.name}</span></a></td><td class="n">${p.w + p.l}</td><td class="n">${p.w}–${p.l}</td><td class="n"><b>${Math.round(p.r)}</b></td></tr>`).join("")}</table></div>`,
+  players: () => `
+    <h2>Игроки клуба</h2><p class="sub">Фото кладите в папку photos/ и указывайте путь в данных.</p>
+    <div class="grid">${ranked.map((p, i) => `
+      <div class="card"><div class="who">${av(p)}<div><h3>${p.name}</h3><span class="tag">#${i + 1} в рейтинге</span></div></div>
+      <dl class="kv"><dt>Рейтинг</dt><dd><b>${Math.round(p.r)}</b></dd><dt>Победы / поражения</dt><dd>${p.w} / ${p.l}</dd><dt>Возраст</dt><dd>${p.age}</dd><dt>Рука, хват</dt><dd>${p.hand}, ${p.grip}</dd><dt>В клубе с</dt><dd>${p.since}</dd></dl>
+      <p class="note" style="margin:0">${p.bio}</p>
+      <details><summary>История матчей</summary>${p.h.length ? [...p.h].reverse().map(h => `<div class="m"><span>${fmt(h.d)} · ${P[h.o].name}</span><span class="${h.win ? "w" : "l"}">${h.f}:${h.g}</span></div>`).join("") : "<p class='note'>Матчей пока нет.</p>"}</details></div>`).join("")}</div>`
+};
+const labels = { home: "Главная", schedule: "Тренировки", rent: "Аренда", tournaments: "Турниры", rating: "Рейтинг", players: "Игроки" };
+function route() {
+  const h = (location.hash || "#home").slice(1); const k = views[h] ? h : "home";
+  document.getElementById("app").innerHTML = views[k]();
+  document.getElementById("nav").innerHTML = Object.entries(labels).map(([id, t]) => `<a href="#${id}" class="${id === k ? "on" : ""}">${t}</a>`).join("");
+  window.scrollTo(0, 0);
+}
+addEventListener("hashchange", route); route();
+</script>
+</body>
+</html>
