@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10151f">
+<title>Tennis Team — рейтинг клубу</title>
+<style>
+:root{--bg:#0b1018;--panel:#141d2a;--panel2:#1b2737;--line:#2a394d;--text:#f4f7fb;--muted:#9aabc0;--accent:#e6b94f;--green:#4fd19a;--red:#ff7272}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 0%,#1b2b3d 0,transparent 32%),var(--bg);color:var(--text);font:15px/1.45 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:1050px;margin:auto;padding:22px 16px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:var(--accent);color:#171b22;display:grid;place-items:center;font-size:24px;font-weight:900}
+h1{font-size:20px;letter-spacing:.08em;margin:0}.sub{color:var(--muted);font-size:12px;margin-top:3px}.pill{border:1px solid #526277;color:#dbe5f0;border-radius:30px;padding:7px 11px;font-size:12px}
+.hero{background:linear-gradient(120deg,#17283a,#111a27 70%);border:1px solid var(--line);border-radius:22px;padding:24px;margin-bottom:16px}
+.eyebrow{color:var(--accent);font-size:11px;letter-spacing:.16em;font-weight:800}.hero h2{font-size:clamp(25px,5vw,38px);line-height:1.08;margin:8px 0}.hero p{color:var(--muted);margin:0;max-width:600px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.stat,.card{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:16px}.stat strong{display:block;font-size:25px}.stat span{color:var(--muted);font-size:12px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tab,button{border:1px solid var(--line);border-radius:11px;padding:10px 14px;background:var(--panel2);color:var(--text);font-weight:650;cursor:pointer}.tab.active,button.primary{background:var(--accent);color:#171b22;border-color:var(--accent)}button.danger{border-color:#663b43;color:#ffaaaa;background:#2a1b22}button:disabled{opacity:.4;cursor:not-allowed}
+.panel{display:none}.panel.active{display:block}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:6px 0 13px}.sectionhead h3{margin:0;font-size:18px}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:15px;background:var(--panel)}table{width:100%;border-collapse:collapse;min-width:520px}th,td{text-align:left;padding:13px 14px;border-bottom:1px solid var(--line)}th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}td{font-size:14px}tr:last-child td{border-bottom:0}.rank{color:var(--accent);font-weight:800}.points{font-weight:800;font-variant-numeric:tabular-nums}.muted{color:var(--muted)}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}label{font-size:12px;color:var(--muted)}input,select{width:100%;border:1px solid var(--line);background:#0e1621;color:var(--text);border-radius:10px;padding:12px;font:inherit;min-height:44px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.match{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.match:last-child{border:0}.match strong{display:block}.match small{color:var(--muted)}.delta{color:var(--green);font-weight:800;white-space:nowrap}
+.notice{border:1px solid #68572c;background:#2a2417;color:#f5dda0;padding:12px 14px;border-radius:12px;font-size:12px;margin-top:15px}
+.empty{padding:25px;text-align:center;color:var(--muted)}.lock{max-width:430px;margin:15px auto}.hidden{display:none!important}
+footer{color:#708198;text-align:center;font-size:11px;margin-top:26px}
+@media(max-width:620px){.wrap{padding:16px 12px 35px}.hero{padding:19px}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:21px}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.top{align-items:flex-start}.pill{font-size:10px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="logo">🏓</div><div><h1>TENNIS TEAM</h1><div class="sub">КЛУБНИЙ РЕЙТИНГ · ЗАПОРІЖЖЯ</div></div></div>
+    <div class="pill" id="modePill">ПУБЛІЧНИЙ ПЕРЕГЛЯД</div>
+  </header>
+  <section class="hero">
+    <div class="eyebrow">TABLE TENNIS · CLUB RANKING</div>
+    <h2>Грай. Перемагай.<br>Підіймайся в рейтингу.</h2>
+    <p>Єдиний рейтинг учасників Tennis Team. Кожен матч впливає на твою позицію.</p>
+  </section>
+  <div class="stats">
+    <div class="stat"><strong id="playerCount">0</strong><span>УЧАСНИКІВ</span></div>
+    <div class="stat"><strong id="matchCount">0</strong><span>МАТЧІВ</span></div>
+    <div class="stat"><strong>200</strong><span>СТАРТОВИЙ РЕЙТИНГ</span></div>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-tab="rating">Рейтинг</button>
+    <button class="tab" data-tab="matches">Матчі</button>
+    <button class="tab" data-tab="admin">Адміністратор</button>
+  </nav>
+  <section class="panel active" id="rating">
+    <div class="sectionhead"><h3>Загальний рейтинг</h3><span class="muted" id="updated"></span></div>
+    <div class="tablewrap"><table><thead><tr><th>Місце</th><th>Гравець</th><th>Ігри</th><th>Перемоги</th><th>Рейтинг</th></tr></thead><tbody id="rankingBody"></tbody></table></div>
+    <div class="notice">Рейтинг розраховується за системою Elo (K = 32). Після кожного матчу очки переможця та суперника перераховуються автоматично.</div>
+  </section>
+  <section class="panel" id="matches">
+    <div class="sectionhead"><h3>Історія матчів</h3><span class="muted" id="historyCount"></span></div>
+    <div class="card" id="history"></div>
+  </section>
+  <section class="panel" id="admin">
+    <div id="loginBox" class="card lock">
+      <h3 style="margin-top:0">Вхід адміністратора</h3>
+      <p class="muted">У демонстраційній версії введіть PIN-код, щоб відкрити керування.</p>
+      <div class="field"><label for="pin">PIN адміністратора</label><input id="pin" type="password" inputmode="numeric" placeholder="Введіть PIN"></div>
+      <div class="actions"><button class="primary" id="loginBtn">Увійти</button></div>
+      <small class="muted">Демо-PIN: 1234</small>
+    </div>
+    <div id="adminBox" class="hidden">
+      <div class="sectionhead"><h3>Панель адміністратора</h3><button id="logoutBtn">Вийти</button></div>
+      <div class="card" style="margin-bottom:14px">
+        <h3 style="margin-top:0">Додати учасника</h3>
+        <div class="formgrid">
+          <div class="field full"><label for="playerName">Ім'я та прізвище</label><input id="playerName" placeholder="Наприклад, Іван Петренко" maxlength="60"></div>
+        </div>
+        <div class="actions"><button class="primary" id="addPlayer">Додати гравця · 200 очок</button></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <h3 style="margin-top:0">Внести результат матчу</h3>
+        <div class="formgrid">
+          <div class="field"><label for="winner">Переможець</label><select id="winner"><option value="">Оберіть гравця</option></select></div>
+          <div class="field"><label for="loser">Суперник</label><select id="loser"><option value="">Оберіть гравця</option></select></div>
+          <div class="field"><label for="matchDate">Дата матчу</label><input id="matchDate" type="date"></div>
+          <div class="field"><label for="eventName">Турнір / примітка (необов'язково)</label><input id="eventName" placeholder="Клубний турнір"></div>
+        </div>
+        <div class="actions"><button class="primary" id="addMatch">Зберегти результат</button></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Дані клубу</h3>
+        <p class="muted">Завантажте резервну копію, щоб не втратити дані цього браузера.</p>
+        <div class="actions"><button id="exportBtn">Експорт CSV рейтингу</button><button id="backupBtn">Завантажити резервну копію</button><button class="danger" id="resetBtn">Очистити демо-дані</button></div>
+      </div>
+      <div class="notice">Важливо: це локальний прототип. PIN у браузері не є захищеною авторизацією, а дані зберігаються лише на цьому пристрої. Для справжнього спільного сайту потрібні серверна база даних, захищений вхід адміністратора та публічне посилання.</div>
+    </div>
+  </section>
+  <footer>TENNIS TEAM · SOBORNYI AVE 150A · ZAPORIZHZHIA</footer>
+</div>
+<script>
+const KEY='tennis-team-demo-v1';
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||{players:[],matches:[]};
+let isAdmin=false;
+const $=id=>document.getElementById(id);
+const today=new Date(); $('matchDate').value=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function stats(){let m={};data.players.forEach(p=>m[p.id]={games:0,wins:0});data.matches.forEach(x=>{if(m[x.winner]){m[x.winner].games++;m[x.winner].wins++}if(m[x.loser])m[x.loser].games++});return m}
+function sorted(){return [...data.players].sort((a,b)=>b.rating-a.rating||a.name.localeCompare(b.name,'uk'))}
+function render(){
+ const s=stats();$('playerCount').textContent=data.players.length;$('matchCount').textContent=data.matches.length;$('historyCount').textContent=data.matches.length+' записів';
+ $('rankingBody').innerHTML=sorted().map((p,i)=>`<tr><td class="rank">${i+1}</td><td><strong>${esc(p.name)}</strong></td><td>${s[p.id]?.games||0}</td><td>${s[p.id]?.wins||0}</td><td class="points">${Math.round(p.rating)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Поки немає учасників. Додайте гравців через панель адміністратора.</td></tr>';
+ $('history').innerHTML=data.matches.length?[...data.matches].reverse().map(x=>{let w=data.players.find(p=>p.id===x.winner)?.name||'Видалений гравець',l=data.players.find(p=>p.id===x.loser)?.name||'Видалений гравець';return `<div class="match"><div><strong>${esc(w)} <span style="color:var(--accent)">переміг</span> ${esc(l)}</strong><small>${esc(x.date)}${x.event?' · '+esc(x.event):''}</small></div><div class="delta">+${x.change} / −${x.change}</div></div>`}).join(''):'<div class="empty">Матчів ще немає.</div>';
+ ['winner','loser'].forEach(id=>{let old=$(id).value;$(id).innerHTML='<option value="">Оберіть гравця</option>'+sorted().map(p=>`<option value="${p.id}">${esc(p.name)} · ${Math.round(p.rating)}</option>`).join('');if(data.players.some(p=>p.id===old))$(id).value=old});
+ $('modePill').textContent=isAdmin?'РЕЖИМ АДМІНІСТРАТОРА':'ПУБЛІЧНИЙ ПЕРЕГЛЯД';
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')}));
+$('loginBtn').onclick=()=>{if($('pin').value==='1234'){isAdmin=true;$('loginBox').classList.add('hidden');$('adminBox').classList.remove('hidden');$('pin').value='';render()}else alert('Неправильний PIN')};
+$('logoutBtn').onclick=()=>{isAdmin=false;$('adminBox').classList.add('hidden');$('loginBox').classList.remove('hidden');render()};
+$('addPlayer').onclick=()=>{if(!isAdmin)return;let name=$('playerName').value.trim();if(!name)return alert("Введіть ім'я гравця");if(data.players.some(p=>p.name.toLocaleLowerCase()===name.toLocaleLowerCase()))return alert('Такий гравець уже є');data.players.push({id:crypto.randomUUID(),name,rating:200});$('playerName').value='';save()};
+$('addMatch').onclick=()=>{if(!isAdmin)return;let winner=data.players.find(p=>p.id===$('winner').value),loser=data.players.find(p=>p.id===$('loser').value);if(!winner||!loser)return alert('Оберіть обох гравців');if(winner.id===loser.id)return alert('Гравці мають бути різними');let expected=1/(1+Math.pow(10,(loser.rating-winner.rating)/400));let change=Math.max(1,Math.round(32*(1-expected)));winner.rating+=change;loser.rating-=change;data.matches.push({id:crypto.randomUUID(),winner:winner.id,loser:loser.id,date:$('matchDate').value,event:$('eventName').value.trim(),change});$('eventName').value='';save();alert(`Матч збережено. ${winner.name}: +${change}, ${loser.name}: −${change}`)};
+function download(name,content,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([content],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
+$('exportBtn').onclick=()=>{let s=stats(),rows=[['Місце','Гравець','Рейтинг','Матчі','Перемоги'],...sorted().map((p,i)=>[i+1,p.name,Math.round(p.rating),s[p.id].games,s[p.id].wins])];download('tennis-team-rating.csv','\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n'),'text/csv;charset=utf-8')};
+$('backupBtn').onclick=()=>download('tennis-team-backup.json',JSON.stringify(data,null,2),'application/json');
+$('resetBtn').onclick=()=>{if(confirm('Видалити всі учасників і матчі з цього браузера?')){data={players:[],matches:[]};save()}};
+render();
+</script>
+</body></html>
