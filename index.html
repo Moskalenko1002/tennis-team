@@ -72,37 +72,89 @@ summary{cursor:pointer;color:var(--table);font-weight:500;margin-top:.5rem}
 <script>
 /* ====== ТУТ ЗМІНЮЄТЬСЯ ВЕСЬ ВМІСТ САЙТУ (зараз — приклади) ====== */
 const DATA = {
-  club: { tg: "https://t.me/your_username", phone: "+380 00 000 00 00", addr: "Запоріжжя, вул. Прикладна, 1", hours: "Щодня 10:00–22:00" },
+  club: { ig: "https://www.instagram.com/tennisteam.zp", phone: "+380 99 193 41 23", addr: "Запоріжжя, пр. Соборний, 150а", hours: "" },
   schedule: [
-    { day: "Пн, Ср", time: "18:00–19:30", group: "Початківці (діти 7–12)", coach: "Тренер 1" },
-    { day: "Вт, Чт", time: "18:00–19:30", group: "Досвідчені", coach: "Тренер 2" },
-    { day: "Вт, Чт", time: "19:30–21:00", group: "Дорослі", coach: "Тренер 2" },
-    { day: "Сб", time: "11:00–13:00", group: "Вільна гра", coach: "—" }
+    { day: "Пн, Ср, Пт", time: "17:30–19:00", group: "Групові тренування", coach: "Москаленко Єгор Олександрович" },
+    { day: "Інші дні", time: "За домовленістю", group: "Індивідуальні, для 2 або 4 осіб", coach: "Москаленко Єгор Олександрович" }
   ],
   rent: [
-    { name: "Стіл, 1 година", price: "100 ₴" },
-    { name: "Стіл, 10 годин (абонемент)", price: "800 ₴" },
-    { name: "Ракетка та м’ячі, 1 година", price: "30 ₴" },
-    { name: "Групове тренування (разово)", price: "120 ₴" }
+    { name: "Стіл, 1 година", price: "250 ₴" },
+    { name: "Ракетки та 30 м’ячів", price: "входять у вартість" }
   ],
+  /* Для кожного гравця можна додати: age, hand, grip, since, bio — вони з’являться в картці */
   players: [
-    { id: "ivan", name: "Іван Петров", photo: "photos/ivan.jpg", age: 24, hand: "Права", grip: "Перо", since: 2021, bio: "Агресивний стиль, сильний топспін справа." },
-    { id: "anna", name: "Анна Коваль", photo: "photos/anna.jpg", age: 19, hand: "Ліва", grip: "Шейкхенд", since: 2022, bio: "Любить довгі розіграші та захист." },
-    { id: "max", name: "Максим Лис", photo: "photos/max.jpg", age: 31, hand: "Права", grip: "Шейкхенд", since: 2020, bio: "Чемпіон клубу 2025." },
-    { id: "olga", name: "Ольга Шевчук", photo: "photos/olga.jpg", age: 16, hand: "Права", grip: "Шейкхенд", since: 2023, bio: "Швидко прогресує." }
+    { id: "lutsenko-viktor", name: "Луценко Віктор", photo: "photos/lutsenko-viktor.jpg", group: "Молодші", hand: "Права" },
+    { id: "kubar", name: "Кубарь Кирило", photo: "photos/kubar.jpg", group: "Молодші", hand: "Права" },
+    { id: "kublinskyi", name: "Кублинський Вадим", photo: "photos/kublinskyi.jpg", group: "Молодші", hand: "Права" },
+    { id: "perlyk", name: "Перлих Артур", photo: "photos/perlyk.jpg", group: "Молодші", hand: "Права", bio: "Одна з накладок — короткі шипи." },
+    { id: "horbatiuk", name: "Горбатюк Ярослав", photo: "photos/horbatiuk.jpg", group: "Молодші", hand: "Права" },
+    { id: "seomkin", name: "Сьомкін Гліб", photo: "photos/seomkin.jpg", group: "Молодші", hand: "Права" },
+    { id: "yeremenko", name: "Єременко Микита", photo: "photos/yeremenko.jpg", group: "Молодші", hand: "Права" },
+    { id: "spirkach", name: "Спіркач Варвара", photo: "photos/spirkach.jpg", group: "Молодші", hand: "Ліва" },
+    { id: "khvostyk", name: "Хвостик Тимур", photo: "photos/khvostyk.jpg", group: "Молодші", hand: "Права" },
+    { id: "shcherbakov", name: "Щербаков Олександр", photo: "photos/shcherbakov.jpg", group: "Старші", hand: "Права", bio: "Одна з накладок — довгі шипи." },
+    { id: "felskyi", name: "Фельский Ярослав", photo: "photos/felskyi.jpg", group: "Старші", hand: "Права" },
+    { id: "palatakh", name: "Паталах Антон", photo: "photos/palatakh.jpg", group: "Старші", hand: "Права" },
+    { id: "lutsenko-viktoriia", name: "Луценко Вікторія", photo: "photos/lutsenko-viktoriia.jpg", group: "Старші", hand: "Ліва" },
+    { id: "kucheriavyi", name: "Кучерявий Олександр", photo: "photos/kucheriavyi.jpg", group: "Старші", hand: "Права" },
+    { id: "shcherbyna", name: "Щербіна Сергій", photo: "photos/shcherbyna.jpg", group: "Старші", hand: "Права" }
   ],
   tournaments: [
-    { name: "Осінній кубок клубу", date: "2026-10-12", place: "Зал TennisTeam", status: "done", winner: "max" },
-    { name: "Турнір новачків", date: "2026-11-23", place: "Зал TennisTeam", status: "up", info: "Запис до 20 листопада в Telegram." },
-    { name: "Новорічний турнір", date: "2026-12-27", place: "Зал TennisTeam", status: "up", info: "Відкритий, для всіх рівнів." }
+    { name: "Клубний турнір", date: "2026-11-07", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: "Молодші", id: "lutsenko-viktor" }, { g: "Старші", id: "shcherbakov" }] }
   ],
-  /* Матчі: дата, гравець A, гравець B, рахунок за партіями, назва турніру (необов’язково) */
+  /* Матчі: дата, гравець A, гравець B, рахунок за партіями, назва турніру */
   matches: [
-    { d: "2026-09-05", a: "ivan", b: "anna", sa: 3, sb: 1 },
-    { d: "2026-09-12", a: "max", b: "olga", sa: 3, sb: 0 },
-    { d: "2026-10-12", a: "max", b: "ivan", sa: 3, sb: 2, t: "Осінній кубок" },
-    { d: "2026-10-12", a: "anna", b: "olga", sa: 3, sb: 2, t: "Осінній кубок" },
-    { d: "2026-10-19", a: "olga", b: "ivan", sa: 1, sb: 3 }
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "kubar", sa: 3, sb: 2, t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "kublinskyi", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "perlyk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "horbatiuk", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "seomkin", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "yeremenko", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "spirkach", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "kublinskyi", sa: 3, sb: 2, t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "perlyk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "horbatiuk", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "seomkin", sa: 3, sb: 2, t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "yeremenko", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "spirkach", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "perlyk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "horbatiuk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "seomkin", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "yeremenko", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "spirkach", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "perlyk", b: "horbatiuk", sa: 3, sb: 2, t: "Молодші" },
+    { d: "2026-11-07", a: "perlyk", b: "seomkin", sa: 3, sb: 2, t: "Молодші" },
+    { d: "2026-11-07", a: "perlyk", b: "yeremenko", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "perlyk", b: "spirkach", sa: 3, sb: 2, t: "Молодші" },
+    { d: "2026-11-07", a: "perlyk", b: "khvostyk", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "horbatiuk", b: "seomkin", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "horbatiuk", b: "yeremenko", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "horbatiuk", b: "spirkach", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "horbatiuk", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "seomkin", b: "yeremenko", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "seomkin", b: "spirkach", sa: 3, sb: 1, t: "Молодші" },
+    { d: "2026-11-07", a: "seomkin", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "yeremenko", b: "spirkach", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "yeremenko", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "spirkach", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
+    { d: "2026-11-07", a: "shcherbakov", b: "felskyi", sa: 4, sb: 1, t: "Старші" },
+    { d: "2026-11-07", a: "shcherbakov", b: "palatakh", sa: 4, sb: 1, t: "Старші" },
+    { d: "2026-11-07", a: "shcherbakov", b: "lutsenko-viktoriia", sa: 4, sb: 1, t: "Старші" },
+    { d: "2026-11-07", a: "shcherbakov", b: "kucheriavyi", sa: 4, sb: 1, t: "Старші" },
+    { d: "2026-11-07", a: "shcherbakov", b: "shcherbyna", sa: 4, sb: 1, t: "Старші" },
+    { d: "2026-11-07", a: "felskyi", b: "palatakh", sa: 4, sb: 0, t: "Старші" },
+    { d: "2026-11-07", a: "felskyi", b: "lutsenko-viktoriia", sa: 4, sb: 1, t: "Старші" },
+    { d: "2026-11-07", a: "felskyi", b: "kucheriavyi", sa: 4, sb: 2, t: "Старші" },
+    { d: "2026-11-07", a: "felskyi", b: "shcherbyna", sa: 4, sb: 2, t: "Старші" },
+    { d: "2026-11-07", a: "palatakh", b: "lutsenko-viktoriia", sa: 4, sb: 2, t: "Старші" },
+    { d: "2026-11-07", a: "palatakh", b: "kucheriavyi", sa: 4, sb: 2, t: "Старші" },
+    { d: "2026-11-07", a: "palatakh", b: "shcherbyna", sa: 4, sb: 1, t: "Старші" },
+    { d: "2026-11-07", a: "lutsenko-viktoriia", b: "kucheriavyi", sa: 4, sb: 0, t: "Старші" },
+    { d: "2026-11-07", a: "lutsenko-viktoriia", b: "shcherbyna", sa: 4, sb: 1, t: "Старші" },
+    { d: "2026-11-07", a: "kucheriavyi", b: "shcherbyna", sa: 4, sb: 1, t: "Старші" }
   ]
 };
 const START = 200, K = 32; /* START — стартовий рейтинг, K — наскільки сильно рейтинг змінюється після матчу */
@@ -127,29 +179,29 @@ const views = {
       <span class="ball" aria-hidden="true"></span>
       <h1>TennisTeam</h1>
       <p>Клуб настільного тенісу. Тренування, оренда столів, турніри.</p>
-      <a class="btn" href="#schedule">Розклад</a> <a class="btn alt" href="${DATA.club.tg}">Написати в Telegram</a>
+      <a class="btn" href="#schedule">Розклад</a> <a class="btn alt" href="${DATA.club.ig}">Написати в Instagram</a>
     </section>
     <div class="grid">
-      <div class="card"><h3>Адреса</h3>${DATA.club.addr}<br>${DATA.club.hours}</div>
+      <div class="card"><h3>Адреса</h3>${DATA.club.addr}</div>
       <div class="card"><h3>Телефон</h3><a href="tel:${DATA.club.phone.replace(/\s/g, "")}">${DATA.club.phone}</a></div>
       <div class="card"><h3>Лідер рейтингу</h3><div class="who">${av(ranked[0], "s")}<div><b>${ranked[0].name}</b><br>${Math.round(ranked[0].r)}</div></div></div>
       <div class="card"><h3>Найближчий турнір</h3>${(() => { const t = DATA.tournaments.find(t => t.status === "up"); return t ? `<b>${t.name}</b><br>${fmt(t.date)}` : "Незабаром анонс"; })()}</div>
     </div>`,
   schedule: () => `
-    <h2>Тренування</h2><p class="sub">Запис на пробне заняття — в Telegram.</p>
+    <h2>Тренування</h2><p class="sub">Запис на пробне заняття — за телефоном або в Instagram.</p>
     <div class="scroll"><table><tr><th>Дні</th><th>Час</th><th>Група</th><th>Тренер</th></tr>
     ${DATA.schedule.map(s => `<tr><td>${s.day}</td><td>${s.time}</td><td>${s.group}</td><td>${s.coach}</td></tr>`).join("")}</table></div>`,
   rent: () => `
-    <h2>Оренда столів</h2><p class="sub">Працюємо: ${DATA.club.hours}. Бронь за день до гри.</p>
+    <h2>Оренда столів</h2><p class="sub">Ракетки та 30 м’ячів входять у вартість.</p>
     <div class="scroll"><table><tr><th>Послуга</th><th class="n">Ціна</th></tr>
     ${DATA.rent.map(r => `<tr><td>${r.name}</td><td class="n">${r.price}</td></tr>`).join("")}</table></div>
-    <p><a class="btn" href="${DATA.club.tg}">Забронювати стіл</a></p>`,
+    <p><a class="btn" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Забронювати стіл</a></p>`,
   tournaments: () => `
     <h2>Турніри</h2><p class="sub">Результати йдуть у рейтинг гравців.</p>
     <div class="grid">${DATA.tournaments.map(t => `
       <div class="card"><span class="tag ${t.status}">${t.status === "up" ? "Незабаром" : "Завершено"}</span>
       <h3 style="margin-top:.5rem">${t.name}</h3>${fmt(t.date)}<br>${t.place}
-      <p class="note">${t.status === "done" && P[t.winner] ? "Переможець: <b>" + P[t.winner].name + "</b>" : (t.info || "")}</p></div>`).join("")}</div>`,
+      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p></div>`).join("")}</div>`,
   rating: () => `
     <h2>Рейтинг клубу</h2><p class="sub">Система Elo: усі починають із ${START}. Перемога над сильнішим суперником дає більше очок.</p>
     <div class="scroll"><table><tr><th>#</th><th>Гравець</th><th class="n">Ігри</th><th class="n">Пер–Пор</th><th class="n">Рейтинг</th></tr>
@@ -157,9 +209,9 @@ const views = {
   players: () => `
     <h2>Гравці клубу</h2><p class="sub">Фото кладіть у папку photos/ і вказуйте шлях у даних.</p>
     <div class="grid">${ranked.map((p, i) => `
-      <div class="card"><div class="who">${av(p)}<div><h3>${p.name}</h3><span class="tag">#${i + 1} у рейтингу</span></div></div>
-      <dl class="kv"><dt>Рейтинг</dt><dd><b>${Math.round(p.r)}</b></dd><dt>Перемоги / поразки</dt><dd>${p.w} / ${p.l}</dd><dt>Вік</dt><dd>${p.age}</dd><dt>Рука, хват</dt><dd>${p.hand}, ${p.grip}</dd><dt>У клубі з</dt><dd>${p.since}</dd></dl>
-      <p class="note" style="margin:0">${p.bio}</p>
+      <div class="card"><div class="who">${av(p)}<div><h3>${p.name}</h3><span class="tag">#${i + 1} у рейтингу</span>${p.group ? `<br><small class="note">${p.group}</small>` : ""}</div></div>
+      <dl class="kv"><dt>Рейтинг</dt><dd><b>${Math.round(p.r)}</b></dd><dt>Перемоги / поразки</dt><dd>${p.w} / ${p.l}</dd>${p.age ? `<dt>Вік</dt><dd>${p.age}</dd>` : ""}${p.hand ? `<dt>Рука</dt><dd>${p.hand}${p.grip ? ", " + p.grip : ""}</dd>` : ""}${p.since ? `<dt>У клубі з</dt><dd>${p.since}</dd>` : ""}</dl>
+      ${p.bio ? `<p class="note" style="margin:0">${p.bio}</p>` : ""}
       <details><summary>Історія матчів</summary>${p.h.length ? [...p.h].reverse().map(h => `<div class="m"><span>${fmt(h.d)} · ${P[h.o].name}</span><span class="${h.win ? "w" : "l"}">${h.f}:${h.g}</span></div>`).join("") : "<p class='note'>Матчів поки немає.</p>"}</details></div>`).join("")}</div>`
 };
 const labels = { home: "Головна", schedule: "Тренування", rent: "Оренда", tournaments: "Турніри", rating: "Рейтинг", players: "Гравці" };
