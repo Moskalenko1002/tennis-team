@@ -60,6 +60,13 @@ summary{cursor:pointer;color:var(--table);font-weight:500;margin-top:.5rem}
 .m{display:flex;justify-content:space-between;gap:.5rem;padding:.3rem 0;border-bottom:1px dashed var(--line);font-size:.9rem}
 .w{color:var(--ok);font-weight:700}.l{color:#C0392B;font-weight:700}
 .note{font-size:.85rem;color:var(--mute);margin-top:1rem}
+a.card{display:block;text-decoration:none;color:inherit}
+a.card .go{color:var(--table);font-weight:700;margin-top:.6rem;display:block}
+table.ct{min-width:0}
+.ct th,.ct td{padding:.45rem .55rem;text-align:center;white-space:nowrap}
+.ct td:nth-child(2),.ct th:nth-child(2){text-align:left}
+.ct td.self{background:var(--line)}
+select.sel{flex:1;min-width:150px;padding:.6rem;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
 </style>
 </head>
 <body>
@@ -100,61 +107,61 @@ const DATA = {
     { id: "shcherbyna", name: "Щербіна Сергій", photo: "photos/shcherbyna.jpg", group: "Старші", hand: "Права" }
   ],
   tournaments: [
-    { name: "Клубний турнір", date: "2026-11-07", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: "Молодші", id: "lutsenko-viktor" }, { g: "Старші", id: "shcherbakov" }] }
+    { id: "t1", name: "Клубний турнір", date: "2026-11-07", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: "Молодші", id: "lutsenko-viktor" }, { g: "Старші", id: "shcherbakov" }] }
   ],
   /* Матчі: дата, гравець A, гравець B, рахунок за партіями, назва турніру */
   matches: [
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "kubar", sa: 3, sb: 2, t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "kublinskyi", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "perlyk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "horbatiuk", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "seomkin", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "yeremenko", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "spirkach", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "kublinskyi", sa: 3, sb: 2, t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "perlyk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "horbatiuk", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "seomkin", sa: 3, sb: 2, t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "yeremenko", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "spirkach", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "perlyk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "horbatiuk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "seomkin", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "yeremenko", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "spirkach", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "perlyk", b: "horbatiuk", sa: 3, sb: 2, t: "Молодші" },
-    { d: "2026-11-07", a: "perlyk", b: "seomkin", sa: 3, sb: 2, t: "Молодші" },
-    { d: "2026-11-07", a: "perlyk", b: "yeremenko", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "perlyk", b: "spirkach", sa: 3, sb: 2, t: "Молодші" },
-    { d: "2026-11-07", a: "perlyk", b: "khvostyk", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "horbatiuk", b: "seomkin", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "horbatiuk", b: "yeremenko", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "horbatiuk", b: "spirkach", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "horbatiuk", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "seomkin", b: "yeremenko", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "seomkin", b: "spirkach", sa: 3, sb: 1, t: "Молодші" },
-    { d: "2026-11-07", a: "seomkin", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "yeremenko", b: "spirkach", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "yeremenko", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "spirkach", b: "khvostyk", sa: 3, sb: 0, t: "Молодші" },
-    { d: "2026-11-07", a: "shcherbakov", b: "felskyi", sa: 4, sb: 1, t: "Старші" },
-    { d: "2026-11-07", a: "shcherbakov", b: "palatakh", sa: 4, sb: 1, t: "Старші" },
-    { d: "2026-11-07", a: "shcherbakov", b: "lutsenko-viktoriia", sa: 4, sb: 1, t: "Старші" },
-    { d: "2026-11-07", a: "shcherbakov", b: "kucheriavyi", sa: 4, sb: 1, t: "Старші" },
-    { d: "2026-11-07", a: "shcherbakov", b: "shcherbyna", sa: 4, sb: 1, t: "Старші" },
-    { d: "2026-11-07", a: "felskyi", b: "palatakh", sa: 4, sb: 0, t: "Старші" },
-    { d: "2026-11-07", a: "felskyi", b: "lutsenko-viktoriia", sa: 4, sb: 1, t: "Старші" },
-    { d: "2026-11-07", a: "felskyi", b: "kucheriavyi", sa: 4, sb: 2, t: "Старші" },
-    { d: "2026-11-07", a: "felskyi", b: "shcherbyna", sa: 4, sb: 2, t: "Старші" },
-    { d: "2026-11-07", a: "palatakh", b: "lutsenko-viktoriia", sa: 4, sb: 2, t: "Старші" },
-    { d: "2026-11-07", a: "palatakh", b: "kucheriavyi", sa: 4, sb: 2, t: "Старші" },
-    { d: "2026-11-07", a: "palatakh", b: "shcherbyna", sa: 4, sb: 1, t: "Старші" },
-    { d: "2026-11-07", a: "lutsenko-viktoriia", b: "kucheriavyi", sa: 4, sb: 0, t: "Старші" },
-    { d: "2026-11-07", a: "lutsenko-viktoriia", b: "shcherbyna", sa: 4, sb: 1, t: "Старші" },
-    { d: "2026-11-07", a: "kucheriavyi", b: "shcherbyna", sa: 4, sb: 1, t: "Старші" }
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "kubar", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "kublinskyi", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "perlyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "horbatiuk", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "seomkin", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "spirkach", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "kublinskyi", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "perlyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "horbatiuk", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "seomkin", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "yeremenko", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kubar", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "perlyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "horbatiuk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "seomkin", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "kublinskyi", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "perlyk", b: "horbatiuk", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "perlyk", b: "seomkin", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "perlyk", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "perlyk", b: "spirkach", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "perlyk", b: "khvostyk", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "horbatiuk", b: "seomkin", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "horbatiuk", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "horbatiuk", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "horbatiuk", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "seomkin", b: "yeremenko", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "seomkin", b: "spirkach", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "seomkin", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "yeremenko", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "yeremenko", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "spirkach", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
+    { d: "2026-11-07", a: "shcherbakov", b: "felskyi", sa: 4, sb: 1, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "shcherbakov", b: "palatakh", sa: 4, sb: 1, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "shcherbakov", b: "lutsenko-viktoriia", sa: 4, sb: 1, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "shcherbakov", b: "kucheriavyi", sa: 4, sb: 1, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "shcherbakov", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "felskyi", b: "palatakh", sa: 4, sb: 0, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "felskyi", b: "lutsenko-viktoriia", sa: 4, sb: 1, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "felskyi", b: "kucheriavyi", sa: 4, sb: 2, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "felskyi", b: "shcherbyna", sa: 4, sb: 2, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "palatakh", b: "lutsenko-viktoriia", sa: 4, sb: 2, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "palatakh", b: "kucheriavyi", sa: 4, sb: 2, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "palatakh", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "lutsenko-viktoriia", b: "kucheriavyi", sa: 4, sb: 0, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "lutsenko-viktoriia", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: "Старші" },
+    { d: "2026-11-07", a: "kucheriavyi", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: "Старші" }
   ]
 };
 const START = 200, K = 32; /* START — стартовий рейтинг, K — наскільки сильно рейтинг змінюється після матчу */
@@ -173,6 +180,40 @@ const fmt = d => new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month
 const ini = n => n.split(" ").map(x => x[0]).join("");
 const av = (p, c = "") => `<div class="av ${c}"><span>${ini(p.name)}</span><img src="${p.photo}" alt="${p.name}" loading="lazy" onerror="this.remove()"></div>`;
 
+const pct = (w, g) => g ? Math.round(100 * w / g) + "%" : "—";
+function crossTable(g, gm) {
+  const ids = [...new Set(gm.flatMap(m => [m.a, m.b]))];
+  const R = {}, S = Object.fromEntries(ids.map(i => [i, { w: 0, l: 0, sf: 0, sa: 0 }]));
+  gm.forEach(m => {
+    (R[m.a] = R[m.a] || {})[m.b] = [m.sa, m.sb];
+    (R[m.b] = R[m.b] || {})[m.a] = [m.sb, m.sa];
+    const w = m.sa > m.sb ? m.a : m.b, l = w === m.a ? m.b : m.a;
+    S[w].w++; S[l].l++;
+    S[m.a].sf += m.sa; S[m.a].sa += m.sb; S[m.b].sf += m.sb; S[m.b].sa += m.sa;
+  });
+  const pts = i => 2 * S[i].w + S[i].l;
+  const ord = [...ids].sort((x, y) => pts(y) - pts(x) || (S[y].sf - S[y].sa) - (S[x].sf - S[x].sa));
+  const cell = r => r ? `<td class="${r[0] > r[1] ? "w" : "l"}">${r[0]}:${r[1]}</td>` : "<td>–</td>";
+  return `<h3 style="margin:1.4rem 0 .6rem">${g}</h3>
+    <div class="scroll"><table class="ct"><tr><th>№</th><th>Учасник</th>${ord.map((_, i) => `<th>${i + 1}</th>`).join("")}<th>Ігри (В–П)</th><th>Сети</th><th>Очки</th></tr>
+    ${ord.map((id, i) => `<tr><td>${i + 1}</td><td>${P[id].name}</td>${ord.map(o => o === id ? '<td class="self"></td>' : cell(R[id][o])).join("")}<td>${S[id].w + S[id].l} (${S[id].w}–${S[id].l})</td><td>${S[id].sf}:${S[id].sa}</td><td><b>${pts(id)}</b></td></tr>`).join("")}</table></div>`;
+}
+const H = { a: "", b: "" };
+function renderH2H() {
+  if (!H.a || !H.b) return `<p class="note">Оберіть двох гравців.</p>`;
+  if (H.a === H.b) return `<p class="note">Оберіть різних гравців.</p>`;
+  const ms = DATA.matches.filter(m => (m.a === H.a && m.b === H.b) || (m.a === H.b && m.b === H.a)).sort((x, y) => x.d.localeCompare(y.d));
+  if (!ms.length) return `<p class="note">Вони ще не грали між собою.</p>`;
+  let wa = 0;
+  const rows = ms.map(m => {
+    const f = m.a === H.a ? m.sa : m.sb, g = m.a === H.a ? m.sb : m.sa;
+    if (f > g) wa++;
+    const t = DATA.tournaments.find(t => t.id === m.tid);
+    return `<div class="m"><span>${fmt(m.d)}${t ? " · " + t.name : ""}</span><span class="${f > g ? "w" : "l"}">${f}:${g}</span></div>`;
+  }).join("");
+  const wb = ms.length - wa;
+  return `<div class="grid"><div class="card"><h3>${P[H.a].name}</h3><div class="big">${pct(wa, ms.length)}</div>${wa} з ${ms.length}</div><div class="card"><h3>${P[H.b].name}</h3><div class="big">${pct(wb, ms.length)}</div>${wb} з ${ms.length}</div></div><div class="card" style="margin-top:.8rem"><h3>Усі зустрічі</h3>${rows}</div>`;
+}
 const views = {
   home: () => `
     <section class="hero">
@@ -197,11 +238,27 @@ const views = {
     ${DATA.rent.map(r => `<tr><td>${r.name}</td><td class="n">${r.price}</td></tr>`).join("")}</table></div>
     <p><a class="btn" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Забронювати стіл</a></p>`,
   tournaments: () => `
-    <h2>Турніри</h2><p class="sub">Результати йдуть у рейтинг гравців.</p>
-    <div class="grid">${DATA.tournaments.map(t => `
-      <div class="card"><span class="tag ${t.status}">${t.status === "up" ? "Незабаром" : "Завершено"}</span>
+    <h2>Турніри</h2><p class="sub">Результати йдуть у рейтинг гравців. Натисніть на завершений турнір, щоб побачити таблиці.</p>
+    <div class="grid">${DATA.tournaments.map(t => {
+      const link = t.id && t.status === "done";
+      return `<${link ? `a href="#t-${t.id}"` : "div"} class="card"><span class="tag ${t.status}">${t.status === "up" ? "Незабаром" : "Завершено"}</span>
       <h3 style="margin-top:.5rem">${t.name}</h3>${fmt(t.date)}<br>${t.place}
-      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p></div>`).join("")}</div>`,
+      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p>${link ? '<span class="go">Дивитись таблиці →</span>' : ""}</${link ? "a" : "div"}>`;
+    }).join("")}</div>`,
+  tournament: id => {
+    const t = DATA.tournaments.find(x => x.id === id);
+    if (!t) return views.tournaments();
+    const ms = DATA.matches.filter(m => m.tid === id);
+    const groups = [...new Set(ms.map(m => m.t))];
+    return `<p><a href="#tournaments">← Усі турніри</a></p><h2>${t.name}</h2><p class="sub">${fmt(t.date)} · ${t.place}</p>${groups.map(g => crossTable(g, ms.filter(m => m.t === g))).join("")}<p class="note">Очки: 2 за перемогу, 1 за поразку. Місце визначається за очками, потім за різницею сетів.</p>`;
+  },
+  stats: () => `
+    <h2>Статистика</h2><p class="sub">За всі турніри клубу.</p>
+    <div class="scroll"><table><tr><th>Гравець</th><th class="n">Ігри</th><th class="n">Перемоги</th><th class="n">% перемог</th></tr>
+    ${[...ranked].sort((x, y) => (y.w / ((y.w + y.l) || 1)) - (x.w / ((x.w + x.l) || 1)) || (y.w + y.l) - (x.w + x.l)).map(p => `<tr><td>${p.name}</td><td class="n">${p.w + p.l}</td><td class="n">${p.w}</td><td class="n"><b>${pct(p.w, p.w + p.l)}</b></td></tr>`).join("")}</table></div>
+    <h2 style="margin-top:1.8rem;font-size:1.2rem">Очна статистика</h2><p class="sub">Скільки разів двоє гравців грали між собою і хто частіше вигравав.</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem">${["a", "b"].map(k => `<select class="sel" aria-label="Гравець" onchange="H.${k}=this.value;document.getElementById('h2h').innerHTML=renderH2H()"><option value="">Оберіть гравця</option>${ranked.map(p => `<option value="${p.id}" ${H[k] === p.id ? "selected" : ""}>${p.name}</option>`).join("")}</select>`).join("")}</div>
+    <div id="h2h">${renderH2H()}</div>`,
   rating: () => `
     <h2>Рейтинг клубу</h2><p class="sub">Система Elo: усі починають із ${START}. Перемога над сильнішим суперником дає більше очок.</p>
     <div class="scroll"><table><tr><th>#</th><th>Гравець</th><th class="n">Ігри</th><th class="n">Пер–Пор</th><th class="n">Рейтинг</th></tr>
@@ -214,10 +271,12 @@ const views = {
       ${p.bio ? `<p class="note" style="margin:0">${p.bio}</p>` : ""}
       <details><summary>Історія матчів</summary>${p.h.length ? [...p.h].reverse().map(h => `<div class="m"><span>${fmt(h.d)} · ${P[h.o].name}</span><span class="${h.win ? "w" : "l"}">${h.f}:${h.g}</span></div>`).join("") : "<p class='note'>Матчів поки немає.</p>"}</details></div>`).join("")}</div>`
 };
-const labels = { home: "Головна", schedule: "Тренування", rent: "Оренда", tournaments: "Турніри", rating: "Рейтинг", players: "Гравці" };
+const labels = { home: "Головна", schedule: "Тренування", rent: "Оренда", tournaments: "Турніри", rating: "Рейтинг", players: "Гравці", stats: "Статистика" };
 function route() {
-  const h = (location.hash || "#home").slice(1); const k = views[h] ? h : "home";
-  document.getElementById("app").innerHTML = views[k]();
+  const h = (location.hash || "#home").slice(1);
+  const tm = h.match(/^t-(.+)$/);
+  const k = tm ? "tournaments" : (views[h] ? h : "home");
+  document.getElementById("app").innerHTML = tm ? views.tournament(tm[1]) : views[k]();
   document.getElementById("nav").innerHTML = Object.entries(labels).map(([id, t]) => `<a href="#${id}" class="${id === k ? "on" : ""}">${t}</a>`).join("");
   window.scrollTo(0, 0);
 }
