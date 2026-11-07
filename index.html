@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ru">
+<html lang="uk">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TennisTeam — клуб настольного тенниса</title>
+<title>TennisTeam — клуб настільного тенісу</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700&family=Unbounded:wght@600;800&display=swap" rel="stylesheet">
@@ -70,43 +70,43 @@ summary{cursor:pointer;color:var(--table);font-weight:500;margin-top:.5rem}
 <main id="app"></main>
 
 <script>
-/* ====== ЗДЕСЬ МЕНЯЕТСЯ ВСЁ СОДЕРЖИМОЕ САЙТА (сейчас — примеры) ====== */
+/* ====== ТУТ ЗМІНЮЄТЬСЯ ВЕСЬ ВМІСТ САЙТУ (зараз — приклади) ====== */
 const DATA = {
-  club: { tg: "https://t.me/your_username", phone: "+380 00 000 00 00", addr: "Запорожье, ул. Примерная, 1", hours: "Ежедневно 10:00–22:00" },
+  club: { tg: "https://t.me/your_username", phone: "+380 00 000 00 00", addr: "Запоріжжя, вул. Прикладна, 1", hours: "Щодня 10:00–22:00" },
   schedule: [
-    { day: "Пн, Ср", time: "18:00–19:30", group: "Начинающие (дети 7–12)", coach: "Тренер 1" },
-    { day: "Вт, Чт", time: "18:00–19:30", group: "Продолжающие", coach: "Тренер 2" },
-    { day: "Вт, Чт", time: "19:30–21:00", group: "Взрослые", coach: "Тренер 2" },
-    { day: "Сб", time: "11:00–13:00", group: "Свободная игра", coach: "—" }
+    { day: "Пн, Ср", time: "18:00–19:30", group: "Початківці (діти 7–12)", coach: "Тренер 1" },
+    { day: "Вт, Чт", time: "18:00–19:30", group: "Досвідчені", coach: "Тренер 2" },
+    { day: "Вт, Чт", time: "19:30–21:00", group: "Дорослі", coach: "Тренер 2" },
+    { day: "Сб", time: "11:00–13:00", group: "Вільна гра", coach: "—" }
   ],
   rent: [
-    { name: "Стол, 1 час", price: "100 ₴" },
-    { name: "Стол, 10 часов (абонемент)", price: "800 ₴" },
-    { name: "Ракетка и мячи, 1 час", price: "30 ₴" },
-    { name: "Групповая тренировка (разово)", price: "120 ₴" }
+    { name: "Стіл, 1 година", price: "100 ₴" },
+    { name: "Стіл, 10 годин (абонемент)", price: "800 ₴" },
+    { name: "Ракетка та м’ячі, 1 година", price: "30 ₴" },
+    { name: "Групове тренування (разово)", price: "120 ₴" }
   ],
   players: [
-    { id: "ivan", name: "Иван Петров", photo: "photos/ivan.jpg", age: 24, hand: "Правая", grip: "Перо", since: 2021, bio: "Агрессивный стиль, сильный топспин справа." },
-    { id: "anna", name: "Анна Коваль", photo: "photos/anna.jpg", age: 19, hand: "Левая", grip: "Шейкхэнд", since: 2022, bio: "Любит длинные розыгрыши и защиту." },
-    { id: "max", name: "Максим Лис", photo: "photos/max.jpg", age: 31, hand: "Правая", grip: "Шейкхэнд", since: 2020, bio: "Чемпион клуба 2025." },
-    { id: "olga", name: "Ольга Шевчук", photo: "photos/olga.jpg", age: 16, hand: "Правая", grip: "Шейкхэнд", since: 2023, bio: "Быстро прогрессирует." }
+    { id: "ivan", name: "Іван Петров", photo: "photos/ivan.jpg", age: 24, hand: "Права", grip: "Перо", since: 2021, bio: "Агресивний стиль, сильний топспін справа." },
+    { id: "anna", name: "Анна Коваль", photo: "photos/anna.jpg", age: 19, hand: "Ліва", grip: "Шейкхенд", since: 2022, bio: "Любить довгі розіграші та захист." },
+    { id: "max", name: "Максим Лис", photo: "photos/max.jpg", age: 31, hand: "Права", grip: "Шейкхенд", since: 2020, bio: "Чемпіон клубу 2025." },
+    { id: "olga", name: "Ольга Шевчук", photo: "photos/olga.jpg", age: 16, hand: "Права", grip: "Шейкхенд", since: 2023, bio: "Швидко прогресує." }
   ],
   tournaments: [
-    { name: "Осенний кубок клуба", date: "2026-10-12", place: "Зал TennisTeam", status: "done", winner: "max" },
-    { name: "Турнир новичков", date: "2026-11-23", place: "Зал TennisTeam", status: "up", info: "Запись до 20 ноября в Telegram." },
-    { name: "Новогодний турнир", date: "2026-12-27", place: "Зал TennisTeam", status: "up", info: "Открытый, для всех уровней." }
+    { name: "Осінній кубок клубу", date: "2026-10-12", place: "Зал TennisTeam", status: "done", winner: "max" },
+    { name: "Турнір новачків", date: "2026-11-23", place: "Зал TennisTeam", status: "up", info: "Запис до 20 листопада в Telegram." },
+    { name: "Новорічний турнір", date: "2026-12-27", place: "Зал TennisTeam", status: "up", info: "Відкритий, для всіх рівнів." }
   ],
-  /* Матчи: дата, игрок A, игрок B, счёт по партиям, название турнира (необязательно) */
+  /* Матчі: дата, гравець A, гравець B, рахунок за партіями, назва турніру (необов’язково) */
   matches: [
     { d: "2026-09-05", a: "ivan", b: "anna", sa: 3, sb: 1 },
     { d: "2026-09-12", a: "max", b: "olga", sa: 3, sb: 0 },
-    { d: "2026-10-12", a: "max", b: "ivan", sa: 3, sb: 2, t: "Осенний кубок" },
-    { d: "2026-10-12", a: "anna", b: "olga", sa: 3, sb: 2, t: "Осенний кубок" },
+    { d: "2026-10-12", a: "max", b: "ivan", sa: 3, sb: 2, t: "Осінній кубок" },
+    { d: "2026-10-12", a: "anna", b: "olga", sa: 3, sb: 2, t: "Осінній кубок" },
     { d: "2026-10-19", a: "olga", b: "ivan", sa: 1, sb: 3 }
   ]
 };
-const START = 1000, K = 32;
-/* ====== КОНЕЦ НАСТРОЕК ====== */
+const START = 200, K = 32; /* START — стартовий рейтинг, K — наскільки сильно рейтинг змінюється після матчу */
+/* ====== КІНЕЦЬ НАЛАШТУВАНЬ ====== */
 
 const P = Object.fromEntries(DATA.players.map(p => [p.id, { ...p, r: START, w: 0, l: 0, h: [] }]));
 [...DATA.matches].sort((x, y) => x.d.localeCompare(y.d)).forEach(m => {
@@ -117,7 +117,7 @@ const P = Object.fromEntries(DATA.players.map(p => [p.id, { ...p, r: START, w: 0
   b.h.push({ d: m.d, o: a.id, f: m.sb, g: m.sa, win: !s });
 });
 const ranked = Object.values(P).sort((x, y) => y.r - x.r);
-const fmt = d => new Date(d).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+const fmt = d => new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" });
 const ini = n => n.split(" ").map(x => x[0]).join("");
 const av = (p, c = "") => `<div class="av ${c}"><span>${ini(p.name)}</span><img src="${p.photo}" alt="${p.name}" loading="lazy" onerror="this.remove()"></div>`;
 
@@ -126,43 +126,43 @@ const views = {
     <section class="hero">
       <span class="ball" aria-hidden="true"></span>
       <h1>TennisTeam</h1>
-      <p>Клуб настольного тенниса. Тренировки, аренда столов, турниры.</p>
-      <a class="btn" href="#schedule">Расписание</a> <a class="btn alt" href="${DATA.club.tg}">Написать в Telegram</a>
+      <p>Клуб настільного тенісу. Тренування, оренда столів, турніри.</p>
+      <a class="btn" href="#schedule">Розклад</a> <a class="btn alt" href="${DATA.club.tg}">Написати в Telegram</a>
     </section>
     <div class="grid">
-      <div class="card"><h3>Адрес</h3>${DATA.club.addr}<br>${DATA.club.hours}</div>
+      <div class="card"><h3>Адреса</h3>${DATA.club.addr}<br>${DATA.club.hours}</div>
       <div class="card"><h3>Телефон</h3><a href="tel:${DATA.club.phone.replace(/\s/g, "")}">${DATA.club.phone}</a></div>
-      <div class="card"><h3>Лидер рейтинга</h3><div class="who">${av(ranked[0], "s")}<div><b>${ranked[0].name}</b><br>${Math.round(ranked[0].r)}</div></div></div>
-      <div class="card"><h3>Ближайший турнир</h3>${(() => { const t = DATA.tournaments.find(t => t.status === "up"); return t ? `<b>${t.name}</b><br>${fmt(t.date)}` : "Скоро анонс"; })()}</div>
+      <div class="card"><h3>Лідер рейтингу</h3><div class="who">${av(ranked[0], "s")}<div><b>${ranked[0].name}</b><br>${Math.round(ranked[0].r)}</div></div></div>
+      <div class="card"><h3>Найближчий турнір</h3>${(() => { const t = DATA.tournaments.find(t => t.status === "up"); return t ? `<b>${t.name}</b><br>${fmt(t.date)}` : "Незабаром анонс"; })()}</div>
     </div>`,
   schedule: () => `
-    <h2>Тренировки</h2><p class="sub">Запись на пробное занятие — в Telegram.</p>
-    <div class="scroll"><table><tr><th>Дни</th><th>Время</th><th>Группа</th><th>Тренер</th></tr>
+    <h2>Тренування</h2><p class="sub">Запис на пробне заняття — в Telegram.</p>
+    <div class="scroll"><table><tr><th>Дні</th><th>Час</th><th>Група</th><th>Тренер</th></tr>
     ${DATA.schedule.map(s => `<tr><td>${s.day}</td><td>${s.time}</td><td>${s.group}</td><td>${s.coach}</td></tr>`).join("")}</table></div>`,
   rent: () => `
-    <h2>Аренда столов</h2><p class="sub">Работаем: ${DATA.club.hours}. Бронь за день до игры.</p>
-    <div class="scroll"><table><tr><th>Услуга</th><th class="n">Цена</th></tr>
+    <h2>Оренда столів</h2><p class="sub">Працюємо: ${DATA.club.hours}. Бронь за день до гри.</p>
+    <div class="scroll"><table><tr><th>Послуга</th><th class="n">Ціна</th></tr>
     ${DATA.rent.map(r => `<tr><td>${r.name}</td><td class="n">${r.price}</td></tr>`).join("")}</table></div>
-    <p><a class="btn" href="${DATA.club.tg}">Забронировать стол</a></p>`,
+    <p><a class="btn" href="${DATA.club.tg}">Забронювати стіл</a></p>`,
   tournaments: () => `
-    <h2>Турниры</h2><p class="sub">Результаты идут в рейтинг игроков.</p>
+    <h2>Турніри</h2><p class="sub">Результати йдуть у рейтинг гравців.</p>
     <div class="grid">${DATA.tournaments.map(t => `
-      <div class="card"><span class="tag ${t.status}">${t.status === "up" ? "Скоро" : "Завершён"}</span>
+      <div class="card"><span class="tag ${t.status}">${t.status === "up" ? "Незабаром" : "Завершено"}</span>
       <h3 style="margin-top:.5rem">${t.name}</h3>${fmt(t.date)}<br>${t.place}
-      <p class="note">${t.status === "done" && P[t.winner] ? "Победитель: <b>" + P[t.winner].name + "</b>" : (t.info || "")}</p></div>`).join("")}</div>`,
+      <p class="note">${t.status === "done" && P[t.winner] ? "Переможець: <b>" + P[t.winner].name + "</b>" : (t.info || "")}</p></div>`).join("")}</div>`,
   rating: () => `
-    <h2>Рейтинг клуба</h2><p class="sub">Система Elo: все начинают с ${START}. Победа над сильным соперником даёт больше очков.</p>
-    <div class="scroll"><table><tr><th>#</th><th>Игрок</th><th class="n">Игры</th><th class="n">В–П</th><th class="n">Рейтинг</th></tr>
+    <h2>Рейтинг клубу</h2><p class="sub">Система Elo: усі починають із ${START}. Перемога над сильнішим суперником дає більше очок.</p>
+    <div class="scroll"><table><tr><th>#</th><th>Гравець</th><th class="n">Ігри</th><th class="n">Пер–Пор</th><th class="n">Рейтинг</th></tr>
     ${ranked.map((p, i) => `<tr><td>${i + 1}</td><td><a href="#players" style="text-decoration:none;color:inherit"><span class="pl">${av(p, "s")}${p.name}</span></a></td><td class="n">${p.w + p.l}</td><td class="n">${p.w}–${p.l}</td><td class="n"><b>${Math.round(p.r)}</b></td></tr>`).join("")}</table></div>`,
   players: () => `
-    <h2>Игроки клуба</h2><p class="sub">Фото кладите в папку photos/ и указывайте путь в данных.</p>
+    <h2>Гравці клубу</h2><p class="sub">Фото кладіть у папку photos/ і вказуйте шлях у даних.</p>
     <div class="grid">${ranked.map((p, i) => `
-      <div class="card"><div class="who">${av(p)}<div><h3>${p.name}</h3><span class="tag">#${i + 1} в рейтинге</span></div></div>
-      <dl class="kv"><dt>Рейтинг</dt><dd><b>${Math.round(p.r)}</b></dd><dt>Победы / поражения</dt><dd>${p.w} / ${p.l}</dd><dt>Возраст</dt><dd>${p.age}</dd><dt>Рука, хват</dt><dd>${p.hand}, ${p.grip}</dd><dt>В клубе с</dt><dd>${p.since}</dd></dl>
+      <div class="card"><div class="who">${av(p)}<div><h3>${p.name}</h3><span class="tag">#${i + 1} у рейтингу</span></div></div>
+      <dl class="kv"><dt>Рейтинг</dt><dd><b>${Math.round(p.r)}</b></dd><dt>Перемоги / поразки</dt><dd>${p.w} / ${p.l}</dd><dt>Вік</dt><dd>${p.age}</dd><dt>Рука, хват</dt><dd>${p.hand}, ${p.grip}</dd><dt>У клубі з</dt><dd>${p.since}</dd></dl>
       <p class="note" style="margin:0">${p.bio}</p>
-      <details><summary>История матчей</summary>${p.h.length ? [...p.h].reverse().map(h => `<div class="m"><span>${fmt(h.d)} · ${P[h.o].name}</span><span class="${h.win ? "w" : "l"}">${h.f}:${h.g}</span></div>`).join("") : "<p class='note'>Матчей пока нет.</p>"}</details></div>`).join("")}</div>`
+      <details><summary>Історія матчів</summary>${p.h.length ? [...p.h].reverse().map(h => `<div class="m"><span>${fmt(h.d)} · ${P[h.o].name}</span><span class="${h.win ? "w" : "l"}">${h.f}:${h.g}</span></div>`).join("") : "<p class='note'>Матчів поки немає.</p>"}</details></div>`).join("")}</div>`
 };
-const labels = { home: "Главная", schedule: "Тренировки", rent: "Аренда", tournaments: "Турниры", rating: "Рейтинг", players: "Игроки" };
+const labels = { home: "Головна", schedule: "Тренування", rent: "Оренда", tournaments: "Турніри", rating: "Рейтинг", players: "Гравці" };
 function route() {
   const h = (location.hash || "#home").slice(1); const k = views[h] ? h : "home";
   document.getElementById("app").innerHTML = views[k]();
