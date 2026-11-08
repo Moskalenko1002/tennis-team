@@ -124,6 +124,55 @@ select.sel{flex:1;min-width:150px;padding:.6rem;border-radius:10px;border:1px so
 @keyframes grow{from{transform:scaleX(0)}}
 .pts{font-family:Unbounded,Onest,sans-serif;font-size:1.1rem}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.bl{transform:none}}
+/* ---- карусель розділів ---- */
+.car{position:relative;display:flex;gap:.8rem;overflow-x:auto;scroll-snap-type:x mandatory;margin:1.2rem -1rem -.4rem;padding:.4rem 1rem 1.8rem;scroll-padding:0 1rem;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.car::-webkit-scrollbar{display:none}
+.slide{position:relative;flex:0 0 min(74vw,270px);height:190px;scroll-snap-align:start;border-radius:20px;padding:1.1rem;color:#fff;text-decoration:none;display:flex;flex-direction:column;justify-content:flex-end;gap:.25rem;overflow:hidden;background:linear-gradient(145deg,var(--c),var(--c2));box-shadow:0 10px 24px rgba(0,0,0,.18);animation:pop .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*70ms);transition:transform .15s ease}
+@keyframes pop{from{opacity:0;transform:translateX(40px) scale(.92)}}
+.slide:active{transform:scale(.97)}
+.slide:before{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.14)}
+.slide .ic{position:absolute;right:1rem;top:.8rem;font-size:2.6rem;line-height:1}
+.slide b{font-family:Unbounded,Onest,sans-serif;font-size:1.15rem;line-height:1.15}
+.slide small{opacity:.92;font-size:.85rem;line-height:1.3;max-width:72%}
+.slide .arr{position:absolute;right:1rem;bottom:1rem;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-weight:800}
+.dots{display:flex;justify-content:center;gap:.4rem;margin:-.2rem 0 1.2rem}
+.dots i{width:7px;height:7px;border-radius:99px;background:var(--line);transition:width .25s,background .25s;cursor:pointer}
+.dots i.on{width:22px;background:var(--ball)}
+/* ---- картка гравця, статистика ---- */
+.av.m{width:52px;height:52px;font-size:.9rem}
+.av.sq{width:112px;height:112px;border-radius:22px;font-size:1.6rem;background:#1B3A5E}
+.pc{display:flex;align-items:center;gap:.8rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.8rem;text-decoration:none;color:inherit;transition:transform .15s ease}
+.pc:active,.sr:active,a.rk:active{transform:scale(.98)}
+.pr{display:flex;flex-direction:column;align-items:flex-end;gap:.25rem}
+a.rk,.sr{text-decoration:none;color:inherit}
+.sr{display:flex;align-items:center;gap:.7rem;padding:.8rem 1rem;border-bottom:1px solid var(--line)}
+.sr:last-child{border-bottom:0}
+.wl{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--line);margin:.35rem 0}
+.wl i{display:block;height:100%;transform-origin:left;animation:grow .8s cubic-bezier(.2,.8,.2,1) both}
+.wl .g{background:#1E8E5A}.wl .r{background:#D64545}
+.vs{height:10px;border-radius:99px;background:var(--table);overflow:hidden;margin:.8rem 0}
+.vs i{display:block;height:100%;background:var(--ball);border-radius:99px}
+.pcard{background:linear-gradient(160deg,#12304F,#0B1624);color:#EAF0F6;border-radius:22px;padding:1rem}
+.pcard h2{font-size:1.15rem;color:#fff;margin:.5rem 0 .2rem}
+.pcard h3{font-size:1rem;color:#fff;margin:1.4rem 0 .4rem}
+.ph{display:flex;gap:1rem;align-items:flex-start}
+.pi{min-width:0}
+.lg{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .6rem;border-radius:99px}
+.lg.o{background:rgba(255,122,26,.25);color:#FFB27A}.lg.b{background:rgba(255,255,255,.18);color:#fff}
+.ps{color:#93A3B5;font-size:.9rem}.ps b{color:#fff}
+.pn{font-family:Unbounded,Onest,sans-serif;font-size:2rem;font-weight:800;color:#FF7A1A;line-height:1.1;margin-top:.4rem}
+.pt{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:1rem 0 0}
+.pt div{background:rgba(255,255,255,.07);border-radius:16px;padding:.8rem 1rem}
+.pt b{display:block;font-family:Unbounded,Onest,sans-serif;font-size:1.6rem}
+.pt span{color:#93A3B5;font-size:.85rem}
+.pt div:nth-child(2) b{color:#4FD19A}.pt div:nth-child(3) b{color:#FF7272}
+.rc{width:100%;height:auto;display:block}
+.rcl{display:flex;justify-content:space-between;color:#93A3B5;font-size:.85rem}.rcl b{color:#fff}
+.mr{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.65rem 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.mr:last-child{border-bottom:0}
+.mr small{color:#93A3B5}
+.pill{white-space:nowrap;font-size:.85rem;font-weight:700;padding:.25rem .65rem;border-radius:99px;background:rgba(255,255,255,.12);color:#EAF0F6}
+.pill.w{background:rgba(79,209,154,.16);color:#4FD19A}.pill.l{background:rgba(255,114,114,.16);color:#FF7272}
 </style>
 </head>
 <body>
@@ -149,21 +198,21 @@ const DATA = {
   ],
   /* Для кожного гравця можна додати: age, hand, grip, since, bio — вони з’являться в картці */
   players: [
-    { id: "lutsenko-viktor", name: "Луценко Віктор", photo: "photos/lutsenko-viktor.jpg", group: B, hand: "Права" },
-    { id: "kubar", name: "Кубарь Кирило", photo: "photos/kubar.jpg", group: B, hand: "Права" },
-    { id: "kublinskyi", name: "Кублинський Вадим", photo: "photos/kublinskyi.jpg", group: B, hand: "Права" },
+    { id: "lutsenko-viktor", name: "Луценко Віктор", photo: "photos/lutsenko-viktor.jpg", group: B, born: 2018, hand: "Права" },
+    { id: "kubar", name: "Кубарь Кирило", photo: "photos/kubar.jpg", group: B, born: 2012, hand: "Права" },
+    { id: "kublinskyi", name: "Кублинський Вадим", photo: "photos/kublinskyi.jpg", group: B, born: 2000, hand: "Права" },
     { id: "perlyk", name: "Перлих Артур", photo: "photos/perlyk.jpg", group: B, hand: "Права", bio: "Одна з накладок — короткі шипи." },
-    { id: "horbatiuk", name: "Горбатюк Ярослав", photo: "photos/horbatiuk.jpg", group: B, hand: "Права" },
-    { id: "seomkin", name: "Сьомкін Гліб", photo: "photos/seomkin.jpg", group: B, hand: "Права" },
-    { id: "yeremenko", name: "Єременко Микита", photo: "photos/yeremenko.jpg", group: B, hand: "Права" },
-    { id: "spirkach", name: "Спіркач Варвара", photo: "photos/spirkach.jpg", group: B, hand: "Ліва" },
-    { id: "khvostyk", name: "Хвостик Тимур", photo: "photos/khvostyk.jpg", group: B, hand: "Права" },
-    { id: "shcherbakov", name: "Щербаков Олександр", photo: "photos/shcherbakov.jpg", group: O, hand: "Права", bio: "Одна з накладок — довгі шипи." },
-    { id: "felskyi", name: "Фельский Ярослав", photo: "photos/felskyi.jpg", group: O, hand: "Права" },
-    { id: "palatakh", name: "Паталах Антон", photo: "photos/palatakh.jpg", group: O, hand: "Права" },
-    { id: "lutsenko-viktoriia", name: "Луценко Вікторія", photo: "photos/lutsenko-viktoriia.jpg", group: O, hand: "Ліва" },
-    { id: "kucheriavyi", name: "Кучерявий Олександр", photo: "photos/kucheriavyi.jpg", group: O, hand: "Права" },
-    { id: "shcherbyna", name: "Щербіна Сергій", photo: "photos/shcherbyna.jpg", group: O, hand: "Права" }
+    { id: "horbatiuk", name: "Горбатюк Ярослав", photo: "photos/horbatiuk.jpg", group: B, born: 2013, hand: "Права" },
+    { id: "seomkin", name: "Сьомкін Гліб", photo: "photos/seomkin.jpg", group: B, born: 2012, hand: "Права" },
+    { id: "yeremenko", name: "Єременко Микита", photo: "photos/yeremenko.jpg", group: B, born: 2017, hand: "Права" },
+    { id: "spirkach", name: "Спіркач Варвара", photo: "photos/spirkach.jpg", group: B, born: 2010, hand: "Ліва" },
+    { id: "khvostyk", name: "Хвостик Тимур", photo: "photos/khvostyk.jpg", group: B, born: 2018, hand: "Права" },
+    { id: "shcherbakov", name: "Щербаков Олександр", photo: "photos/shcherbakov.jpg", group: O, born: 2011, hand: "Права", bio: "Одна з накладок — довгі шипи." },
+    { id: "felskyi", name: "Фельський Ярослав", photo: "photos/felskyi.jpg", group: O, born: 2012, hand: "Права" },
+    { id: "palatakh", name: "Паталах Антон", photo: "photos/palatakh.jpg", group: O, born: 1978, hand: "Права" },
+    { id: "lutsenko-viktoriia", name: "Луценко Вікторія", photo: "photos/lutsenko-viktoriia.jpg", group: O, born: 2012, hand: "Ліва" },
+    { id: "kucheriavyi", name: "Кучерявий Олександр", photo: "photos/kucheriavyi.jpg", group: O, born: 1985, hand: "Права" },
+    { id: "shcherbyna", name: "Щербіна Сергій", photo: "photos/shcherbyna.jpg", group: O, born: 1983, hand: "Права" }
   ],
   tournaments: [
     { id: "t1", name: "TT Open #1", date: "2026-11-07", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: B, id: "lutsenko-viktor" }, { g: O, id: "shcherbakov" }] },
@@ -227,13 +276,13 @@ const DATA = {
 const START = 200, K = 32; /* START — стартовий рейтинг, K — наскільки сильно рейтинг змінюється після матчу */
 /* ====== КІНЕЦЬ НАЛАШТУВАНЬ ====== */
 
-const P = Object.fromEntries(DATA.players.map(p => [p.id, { ...p, r: START, w: 0, l: 0, h: [] }]));
+const P = Object.fromEntries(DATA.players.map(p => [p.id, { ...p, r: START, rh: [START], w: 0, l: 0, h: [] }]));
 [...DATA.matches].sort((x, y) => x.d.localeCompare(y.d)).forEach(m => {
   const a = P[m.a], b = P[m.b], ea = 1 / (1 + Math.pow(10, (b.r - a.r) / 400)), s = m.sa > m.sb ? 1 : 0;
-  a.r += K * (s - ea); b.r -= K * (s - ea);
+  const dl = K * (s - ea); a.r += dl; b.r -= dl; a.rh.push(a.r); b.rh.push(b.r);
   (s ? (a.w++, b.l++) : (b.w++, a.l++));
-  a.h.push({ d: m.d, o: b.id, f: m.sa, g: m.sb, win: !!s });
-  b.h.push({ d: m.d, o: a.id, f: m.sb, g: m.sa, win: !s });
+  a.h.push({ d: m.d, o: b.id, f: m.sa, g: m.sb, win: !!s, dr: dl, tid: m.tid });
+  b.h.push({ d: m.d, o: a.id, f: m.sb, g: m.sa, win: !s, dr: -dl, tid: m.tid });
 });
 const ranked = Object.values(P).sort((x, y) => y.r - x.r);
 const fmt = d => new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" });
@@ -258,6 +307,25 @@ function crossTable(g, gm) {
     <div class="scroll"><table class="ct"><tr><th>№</th><th>Учасник</th>${ord.map((_, i) => `<th>${i + 1}</th>`).join("")}<th>Ігри (В–П)</th><th>Сети</th><th>Очки</th></tr>
     ${ord.map((id, i) => `<tr><td>${i + 1}</td><td>${P[id].name}</td>${ord.map(o => o === id ? '<td class="self"></td>' : cell(R[id][o])).join("")}<td>${S[id].w + S[id].l} (${S[id].w}–${S[id].l})</td><td>${S[id].sf}:${S[id].sa}</td><td><b>${pts(id)}</b></td></tr>`).join("")}</table></div>`;
 }
+const sd = d => new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month: "long" });
+function placeIn(gm, pid) {
+  const S = {};
+  gm.forEach(m => {
+    [m.a, m.b].forEach(i => S[i] = S[i] || { w: 0, l: 0, d: 0 });
+    const w = m.sa > m.sb ? m.a : m.b, l = w === m.a ? m.b : m.a;
+    S[w].w++; S[l].l++; S[m.a].d += m.sa - m.sb; S[m.b].d += m.sb - m.sa;
+  });
+  const pts = i => 2 * S[i].w + S[i].l;
+  const ord = Object.keys(S).sort((x, y) => pts(y) - pts(x) || S[y].d - S[x].d);
+  return [ord.indexOf(pid) + 1, ord.length];
+}
+function ratingChart(rh) {
+  if (rh.length < 2) return `<p class="ps">Матчів поки немає.</p>`;
+  const W = 320, T = 130, px = 14, py = 18, lo = Math.min(...rh), span = Math.max(Math.max(...rh) - lo, 1);
+  const pts = rh.map((v, i) => [(px + i * (W - 2 * px) / (rh.length - 1)).toFixed(1), (T - py - (v - lo) / span * (T - 2 * py)).toFixed(1)]);
+  const line = pts.map(p => p.join(",")).join(" ");
+  return `<svg class="rc" viewBox="0 0 ${W} ${T}" role="img" aria-label="Динаміка рейтингу"><polygon points="${pts[0][0]},${T - py} ${line} ${pts[pts.length - 1][0]},${T - py}" fill="rgba(255,122,26,.16)"/><polyline points="${line}" fill="none" stroke="#FF7A1A" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#FF7A1A"/>`).join("")}</svg><div class="rcl"><span>старт ${Math.round(rh[0])}</span><span>зараз <b>${Math.round(rh[rh.length - 1])}</b></span></div>`;
+}
 const H = { a: "", b: "" };
 function renderH2H() {
   if (!H.a || !H.b) return `<p class="note">Оберіть двох гравців.</p>`;
@@ -272,11 +340,19 @@ function renderH2H() {
     return `<div class="m"><span>${fmt(m.d)}${t ? " · " + t.name : ""}</span><span class="${f > g ? "w" : "l"}">${f}:${g}</span></div>`;
   }).join("");
   const wb = ms.length - wa;
-  return `<div class="grid"><div class="card"><h3>${P[H.a].name}</h3><div class="big">${pct(wa, ms.length)}</div>${wa} з ${ms.length}</div><div class="card"><h3>${P[H.b].name}</h3><div class="big">${pct(wb, ms.length)}</div>${wb} з ${ms.length}</div></div><div class="card" style="margin-top:.8rem"><h3>Усі зустрічі</h3>${rows}</div>`;
+  return `<div class="grid" style="grid-template-columns:1fr 1fr"><div class="card" style="border-top:4px solid var(--ball)"><h3>${P[H.a].name}</h3><div class="big">${pct(wa, ms.length)}</div>${wa} з ${ms.length}</div><div class="card" style="border-top:4px solid var(--table)"><h3>${P[H.b].name}</h3><div class="big">${pct(wb, ms.length)}</div>${wb} з ${ms.length}</div></div><div class="vs" aria-hidden="true"><i style="width:${100 * wa / ms.length}%"></i></div><div class="card"><h3>Усі зустрічі</h3>${rows}</div>`;
 }
 const views = {
   home: () => {
     const up = DATA.tournaments.filter(t => t.status === "up").sort((x, y) => x.date.localeCompare(y.date))[0];
+    const info = {
+      schedule: ["🏓", "Групові та індивідуальні тренування", "#E8650A", "#B84A00"],
+      rent: ["📅", `Стіл — ${DATA.rent[0].price} / година`, "#1B63BE", "#0F3F7E"],
+      tournaments: ["🏆", up ? `${up.name} · ${new Date(up.date).toLocaleDateString("uk-UA", { day: "numeric", month: "long" })}` : "Результати й таблиці", "#1E8E5A", "#136B42"],
+      rating: ["📈", `Лідер: ${ranked[0].name}`, "#7B4FD1", "#4F2F9E"],
+      players: ["👥", `${ranked.length} гравців клубу`, "#0FA3B1", "#0A6F79"],
+      stats: ["📊", "Перемоги та очні зустрічі", "#E0446A", "#A52A49"]
+    };
     return `
     <section class="hero">
       <div class="lane" aria-hidden="true"><span class="bw"><i class="bl"></i><i class="sd"></i></span></div>
@@ -285,7 +361,8 @@ const views = {
       <a class="btn" href="#schedule">Розклад</a> <a class="btn alt" href="${DATA.club.ig}">Instagram</a>
     </section>
     ${up ? `<a class="card accent" href="#tournaments"><span class="tag up">Анонс турніру</span><h3 style="margin:.5rem 0 .3rem;font-size:1.15rem">${up.name}</h3><div class="when">${fmt(up.date)}${up.time ? " о " + up.time : ""}</div>${up.place ? `<div class="note" style="margin:.3rem 0 0">${up.place}</div>` : ""}${up.info ? `<div class="note" style="margin:.3rem 0 0">${up.info}</div>` : ""}<span class="go">Детальніше →</span></a>` : ""}
-    <div class="tiles">${Object.entries(labels).filter(([id]) => id !== "home").map(([id, t], i) => `<a class="tile" style="--c:${["#FF7A1A", "#1B63BE", "#1E8E5A"][i % 3]}" href="#${id}">${t}</a>`).join("")}</div>
+    <div class="car" id="car">${Object.entries(labels).filter(([id]) => id !== "home").map(([id, t], i) => { const [ic, d, c1, c2] = info[id] || ["•", "", "#1B63BE", "#0F3F7E"]; return `<a class="slide" style="--c:${c1};--c2:${c2};--i:${i}" href="#${id}"><span class="ic">${ic}</span><b>${t}</b><small>${d}</small><span class="arr">→</span></a>`; }).join("")}</div>
+    <div class="dots" id="dots">${Object.keys(labels).filter(id => id !== "home").map(() => "<i></i>").join("")}</div>
     <div class="grid">
       <div class="card"><h3>Адреса</h3>${DATA.club.addr}</div>
       <div class="card"><h3>Телефон</h3><a href="tel:${DATA.club.phone.replace(/\s/g, "")}">${DATA.club.phone}</a></div>
@@ -318,36 +395,67 @@ const views = {
     return `<p><a href="#tournaments">← Усі турніри</a></p><h2>${t.name}</h2><p class="sub">${fmt(t.date)} · ${t.place}</p>${groups.map(g => crossTable(g, ms.filter(m => m.t === g))).join("")}<p class="note">Очки: 2 за перемогу, 1 за поразку. Місце визначається за очками, потім за різницею сетів.</p>`;
   },
   stats: () => `
-    <h2>Статистика</h2><p class="sub">За всі турніри клубу.</p>
-    <div class="scroll"><table><tr><th>Гравець</th><th class="n">Ігри</th><th class="n">Перемоги</th><th class="n">% перемог</th></tr>
-    ${[...ranked].sort((x, y) => (y.w / ((y.w + y.l) || 1)) - (x.w / ((x.w + x.l) || 1)) || (y.w + y.l) - (x.w + x.l)).map(p => `<tr><td>${p.name}</td><td class="n">${p.w + p.l}</td><td class="n">${p.w}</td><td class="n"><b>${pct(p.w, p.w + p.l)}</b></td></tr>`).join("")}</table></div>
-    <h2 style="margin-top:1.8rem;font-size:1.2rem">Очна статистика</h2><p class="sub">Скільки разів двоє гравців грали між собою і хто частіше вигравав.</p>
+    <h2>Очна статистика</h2><p class="sub">Оберіть двох гравців — побачите, хто частіше вигравав.</p>
     <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem">${["a", "b"].map(k => `<select class="sel" aria-label="Гравець" onchange="H.${k}=this.value;document.getElementById('h2h').innerHTML=renderH2H()"><option value="">Оберіть гравця</option>${ranked.map(p => `<option value="${p.id}" ${H[k] === p.id ? "selected" : ""}>${p.name}</option>`).join("")}</select>`).join("")}</div>
-    <div id="h2h">${renderH2H()}</div>`,
+    <div id="h2h">${renderH2H()}</div>
+    <h2 style="margin-top:1.8rem">Статистика гравців</h2><p class="sub">За всі турніри клубу. Зелене — перемоги, червоне — поразки.</p>
+    <div class="list">${[...ranked].sort((x, y) => (y.w / ((y.w + y.l) || 1)) - (x.w / ((x.w + x.l) || 1)) || (y.w + y.l) - (x.w + x.l)).map((p, i) => { const g = p.w + p.l; return `<a class="sr" href="#p-${p.id}"><span class="pos">${i + 1}</span><div class="who2"><b>${p.name}</b><div class="wl">${g ? `<i class="g" style="width:${100 * p.w / g}%"></i><i class="r" style="width:${100 * p.l / g}%"></i>` : ""}</div><small>Ігор ${g} · перемог ${p.w} · поразок ${p.l}</small></div><b class="pts">${pct(p.w, g)}</b></a>`; }).join("")}</div>`,
   rating: () => {
     const hi = ranked[0].r, lo = Math.min(...ranked.map(p => p.r));
     return `
     <h2>Рейтинг клубу</h2><p class="sub">Система Elo: усі починають із ${START}. Перемога над сильнішим суперником дає більше очок.</p>
-    <div class="list">${ranked.map((p, i) => `<div class="rk"><span class="pos p${i < 3 ? i + 1 : 0}">${i + 1}</span>${av(p, "s")}<div class="who2"><b>${p.name}</b><div class="meter"><i style="--w:${Math.max(6, Math.round(100 * (p.r - lo + 15) / (hi - lo + 15)))}%;--i:${i}"></i></div><small>${p.w + p.l} ігор, перемог ${p.w}, поразок ${p.l}</small></div><b class="pts">${Math.round(p.r)}</b></div>`).join("")}</div>`;
+    <div class="list">${ranked.map((p, i) => `<a class="rk" href="#p-${p.id}"><span class="pos p${i < 3 ? i + 1 : 0}">${i + 1}</span>${av(p, "s")}<div class="who2"><b>${p.name}</b><div class="meter"><i style="--w:${Math.max(6, Math.round(100 * (p.r - lo + 15) / (hi - lo + 15)))}%;--i:${i}"></i></div><small>${p.w + p.l} ігор, перемог ${p.w}, поразок ${p.l}</small></div><b class="pts">${Math.round(p.r)}</b></a>`).join("")}</div>`;
   },
   players: () => `
-    <h2>Гравці клубу</h2><p class="sub">Фото кладіть у папку photos/ і вказуйте шлях у даних.</p>
-    <div class="grid">${ranked.map((p, i) => `
-      <div class="card"><div class="who">${av(p)}<div><h3>${p.name}</h3><span class="tag">#${i + 1} у рейтингу</span>${p.group ? `<br><small class="note">${p.group}</small>` : ""}</div></div>
-      <dl class="kv"><dt>Рейтинг</dt><dd><b>${Math.round(p.r)}</b></dd><dt>Перемоги / поразки</dt><dd>${p.w} / ${p.l}</dd>${p.age ? `<dt>Вік</dt><dd>${p.age}</dd>` : ""}${p.hand ? `<dt>Рука</dt><dd>${p.hand}${p.grip ? ", " + p.grip : ""}</dd>` : ""}${p.since ? `<dt>У клубі з</dt><dd>${p.since}</dd>` : ""}</dl>
-      ${p.bio ? `<p class="note" style="margin:0">${p.bio}</p>` : ""}
-      <details><summary>Історія матчів</summary>${p.h.length ? [...p.h].reverse().map(h => `<div class="m"><span>${fmt(h.d)} · ${P[h.o].name}</span><span class="${h.win ? "w" : "l"}">${h.f}:${h.g}</span></div>`).join("") : "<p class='note'>Матчів поки немає.</p>"}</details></div>`).join("")}</div>`
+    <h2>Гравці клубу</h2><p class="sub">Натисніть на гравця, щоб відкрити його картку.</p>
+    <div class="grid">${ranked.map((p, i) => { const g = p.w + p.l; return `<a class="pc" href="#p-${p.id}">${av(p, "m")}<div class="who2"><b>${p.name}</b><br><small>${p.group || ""}</small><div class="wl">${g ? `<i class="g" style="width:${100 * p.w / g}%"></i><i class="r" style="width:${100 * p.l / g}%"></i>` : ""}</div></div><div class="pr"><span class="tag">#${i + 1}</span><b class="pts">${Math.round(p.r)}</b></div></a>`; }).join("")}</div>`,
+  player: id => {
+    const p = P[id];
+    if (!p) return views.players();
+    const i = ranked.findIndex(x => x.id === id), g = p.w + p.l;
+    const tl = DATA.tournaments.map(t => {
+      const mine = DATA.matches.filter(m => m.tid === t.id && (m.a === id || m.b === id));
+      if (!mine.length) return "";
+      const grp = mine[0].t, [pl, n] = placeIn(DATA.matches.filter(m => m.tid === t.id && m.t === grp), id);
+      return `<div class="mr"><span>${t.name}<br><small>${grp}</small></span><span class="pill ${pl === 1 ? "w" : ""}">${pl === 1 ? "🥇 " : ""}${pl} місце з ${n}</span></div>`;
+    }).join("");
+    const last = [...p.h].reverse().slice(0, 10).map(h => `<div class="mr"><span>${P[h.o].name}<br><small>${sd(h.d)} · ${h.dr >= 0 ? "+" : "−"}${Math.abs(Math.round(h.dr))} очок</small></span><span class="pill ${h.win ? "w" : "l"}">${h.f}:${h.g} ${h.win ? "Перемога" : "Поразка"}</span></div>`).join("");
+    const det = [p.hand ? ["Рука", p.hand + (p.grip ? ", " + p.grip : "")] : null, p.since ? ["У клубі з", p.since] : null, p.age ? ["Вік", p.age] : null].filter(Boolean).map(x => `<div class="mr"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
+    return `<p><a href="#players">← Усі гравці</a></p>
+    <div class="pcard">
+      <div class="ph">${av(p, "sq")}<div class="pi"><span class="lg ${p.group === O ? "o" : "b"}">${p.group || "Гравець"}</span><h2>${p.name}</h2><div class="ps">Гравець TennisTeam${p.born ? " · " + p.born + " р.н." : ""}</div><div class="pn">№ ${String(i + 1).padStart(2, "0")}</div><div class="ps">Місце в рейтингу · <b>${Math.round(p.r)}</b></div></div></div>
+      <div class="pt"><div><b>${g}</b><span>Матчів</span></div><div><b>${p.w}</b><span>Перемог</span></div><div><b>${p.l}</b><span>Поразок</span></div><div><b>${pct(p.w, g)}</b><span>Перемог, %</span></div></div>
+      <h3>Динаміка рейтингу</h3>${ratingChart(p.rh)}
+      ${tl ? `<h3>Турніри</h3>${tl}` : ""}
+      <h3>Останні матчі</h3>${last || `<p class="ps">Матчів поки немає.</p>`}
+      ${det || p.bio ? `<h3>Про гравця</h3>${det}${p.bio ? `<p class="ps" style="margin:.6rem 0 0">${p.bio}</p>` : ""}` : ""}
+    </div>`;
+  }
 };
 const labels = { home: "Головна", schedule: "Тренування", rent: "Оренда столів", tournaments: "Турніри", rating: "Рейтинг", players: "Гравці", stats: "Статистика" };
+function initCarousel() {
+  const c = document.getElementById("car"), d = [...document.querySelectorAll("#dots i")];
+  if (!c || !d.length) return;
+  const sl = [...c.children], pad = () => parseFloat(getComputedStyle(c).paddingLeft);
+  const upd = () => {
+    let i = 0, b = 1e9;
+    sl.forEach((s, k) => { const x = Math.abs(s.offsetLeft - pad() - c.scrollLeft); if (x < b) { b = x; i = k; } });
+    if (c.scrollLeft + c.clientWidth >= c.scrollWidth - 2) i = sl.length - 1;
+    d.forEach((e, k) => e.classList.toggle("on", k === i));
+  };
+  c.addEventListener("scroll", upd, { passive: true });
+  d.forEach((e, k) => e.addEventListener("click", () => c.scrollTo({ left: sl[k].offsetLeft - pad(), behavior: "smooth" })));
+  upd();
+}
 function route() {
   const h = (location.hash || "#home").slice(1);
-  const tm = h.match(/^t-(.+)$/);
-  const k = tm ? "tournaments" : (h !== "home" && h !== "tournament" && views[h] ? h : "");
+  const tm = h.match(/^t-(.+)$/), pm = h.match(/^p-(.+)$/);
+  const k = tm ? "tournaments" : pm ? "players" : (h !== "home" && h !== "tournament" && h !== "player" && views[h] ? h : "");
   const app = document.getElementById("app");
-  if (!app.dataset.ok) { app.innerHTML = views.home(); app.dataset.ok = "1"; }
+  if (!app.dataset.ok) { app.innerHTML = views.home(); app.dataset.ok = "1"; initCarousel(); }
   const m = document.getElementById("modal");
   if (k) {
-    document.getElementById("mb").innerHTML = tm ? views.tournament(tm[1]) : views[k]();
+    document.getElementById("mb").innerHTML = tm ? views.tournament(tm[1]) : pm ? views.player(pm[1]) : views[k]();
     m.hidden = false; document.body.style.overflow = "hidden";
     document.getElementById("sc").scrollTop = 0;
     document.getElementById("mx").focus({ preventScroll: true });
