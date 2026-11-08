@@ -173,6 +173,35 @@ a.rk,.sr{text-decoration:none;color:inherit}
 .mr small{color:#93A3B5}
 .pill{white-space:nowrap;font-size:.85rem;font-weight:700;padding:.25rem .65rem;border-radius:99px;background:rgba(255,255,255,.12);color:#EAF0F6}
 .pill.w{background:rgba(79,209,154,.16);color:#4FD19A}.pill.l{background:rgba(255,114,114,.16);color:#FF7272}
+/* ---- верхній блок ---- */
+.hx{position:relative;overflow:hidden;border-radius:22px;padding:24px;margin-bottom:1.2rem;color:#fff;display:flex;flex-direction:column;gap:16px;background-color:#0B1624;background-image:radial-gradient(circle at 90% 4%,rgba(255,122,26,.30),rgba(255,122,26,0) 44%),linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:auto,40px 40px,40px 40px;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.hx-top{display:flex;align-items:center;justify-content:space-between;gap:12px;white-space:nowrap}
+.hx-logo{display:flex;align-items:center;gap:10px;font-family:Unbounded,Onest,sans-serif;font-weight:800;font-size:16px}
+.hx-logo i{width:14px;height:14px;border-radius:50%;background:#FF7A1A}
+.hx-eye{font-size:11px;font-weight:800;letter-spacing:.1em;color:#FF9A55}
+.hx svg{display:block;width:100%;height:auto}
+.hx-p{margin:0;text-align:center;font-size:16px;line-height:1.5;color:#C4CFDB}
+.hx-p b{display:block;font-size:20px;font-weight:700;color:#fff;line-height:1.3}
+.hx-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hx-stats div{background:#172E49;border-radius:14px;padding:10px;text-align:center;font-size:12px;color:#A9B6C5}
+.hx-stats b{display:block;font-family:Unbounded,Onest,sans-serif;font-weight:800;font-size:22px;color:#FF7A1A}
+.hx-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hb{min-height:48px;display:flex;align-items:center;justify-content:center;border-radius:99px;font-weight:700;font-size:14px;text-decoration:none;box-sizing:border-box;padding:0 8px;transition:transform .15s ease}
+.hb:active{transform:scale(.97)}
+.hb.o{background:#FF7A1A;color:#1B1000}.hb.l{border:2px solid #fff;color:#fff}.hb.w{background:#fff;color:#0B1624}
+.hb:focus-visible{outline:3px solid #FF7A1A;outline-offset:2px}
+/* ---- низ: контакти і лідер ---- */
+.ct2{background:#172E49;color:#fff;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:14px;margin-top:1.2rem}
+.ct2-k{font-size:12px;font-weight:800;letter-spacing:.16em;color:#FF9A55}
+.ct2-ad{font-family:Unbounded,Onest,sans-serif;font-weight:800;font-size:18px;line-height:1.25}
+.ct2-ph{font-size:18px;font-weight:700;color:#C4CFDB}
+.ct2-bb{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lb{display:flex;align-items:center;gap:16px;margin-top:1rem;padding:18px;border-radius:20px;background:linear-gradient(135deg,#D55800,#A94200);color:#fff;text-decoration:none;transition:transform .15s ease}
+.lb:active{transform:scale(.98)}
+.lb .av{width:72px;height:72px;font-size:1.2rem;background:#1B3A5E;box-shadow:0 0 0 3px #A94200,0 0 0 6px #fff}
+.lb small{display:block;font-size:12px;font-weight:800;letter-spacing:.16em}
+.lb b{display:block;font-family:Unbounded,Onest,sans-serif;font-size:18px;line-height:1.25;margin:2px 0}
+.lb span{font-size:16px;font-weight:700}
 </style>
 </head>
 <body>
@@ -342,6 +371,7 @@ function renderH2H() {
   const wb = ms.length - wa;
   return `<div class="grid" style="grid-template-columns:1fr 1fr"><div class="card" style="border-top:4px solid var(--ball)"><h3>${P[H.a].name}</h3><div class="big">${pct(wa, ms.length)}</div>${wa} з ${ms.length}</div><div class="card" style="border-top:4px solid var(--table)"><h3>${P[H.b].name}</h3><div class="big">${pct(wb, ms.length)}</div>${wb} з ${ms.length}</div></div><div class="vs" aria-hidden="true"><i style="width:${100 * wa / ms.length}%"></i></div><div class="card"><h3>Усі зустрічі</h3>${rows}</div>`;
 }
+const pl = (n, a, b, c) => n % 10 === 1 && n % 100 !== 11 ? a : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c;
 const views = {
   home: () => {
     const up = DATA.tournaments.filter(t => t.status === "up").sort((x, y) => x.date.localeCompare(y.date))[0];
@@ -354,20 +384,32 @@ const views = {
       stats: ["📊", "Перемоги та очні зустрічі", "#E0446A", "#A52A49"]
     };
     return `
-    <section class="hero">
-      <div class="lane" aria-hidden="true"><span class="bw"><i class="bl"></i><i class="sd"></i></span></div>
-      <h1>TennisTeam</h1>
-      <p>Клуб настільного тенісу. Тренування, оренда столів, турніри.</p>
-      <a class="btn" href="#schedule">Розклад</a> <a class="btn alt" href="${DATA.club.ig}">Instagram</a>
+    <section class="hx">
+      <div class="hx-top"><div class="hx-logo"><i></i>TennisTeam</div><div class="hx-eye">БІЛЬШЕ, НІЖ ПРОСТО ГРА</div></div>
+      <svg viewBox="0 0 342 176" role="img" aria-label="ГРАЙ. РОСТИ. ПЕРЕМАГАЙ. Тенісний стіл з м’ячем">
+        <rect x="1" y="1" width="340" height="174" rx="16" fill="#1B63BE"/>
+        <rect x="9" y="9" width="324" height="158" rx="10" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="3"/>
+        <line x1="9" y1="88" x2="333" y2="88" stroke="#fff" stroke-opacity=".5" stroke-width="2"/>
+        <line x1="171" y1="0" x2="171" y2="176" stroke="#fff" stroke-opacity=".45" stroke-width="7"/>
+        <path d="M56 96 Q 150 6 268 46" fill="none" stroke="#FF9A55" stroke-width="3" stroke-dasharray="3 8" stroke-linecap="round"/>
+        <circle class="bl2" cx="0" cy="0" r="10" fill="#FF7A1A"><animateMotion dur="2.4s" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;0" keyTimes="0;.5;1" path="M56 96 Q 150 6 268 46"/></circle>
+        <rect x="21" y="110" width="300" height="44" rx="12" fill="#0B1624" fill-opacity=".62"/>
+        <text x="171" y="141" text-anchor="middle" font-family="Onest, sans-serif" font-weight="800" font-size="24" fill="#fff" textLength="276" lengthAdjust="spacingAndGlyphs">ГРАЙ. <tspan fill="#FF7A1A">РОСТИ.</tspan> ПЕРЕМАГАЙ.</text>
+      </svg>
+      <p class="hx-p"><b>Клуб настільного тенісу</b>Тренування, оренда столів, турніри.</p>
+      <div class="hx-stats"><div><b>${ranked.length}</b>${pl(ranked.length, "гравець", "гравці", "гравців")}</div><div><b>${DATA.matches.length}</b>${pl(DATA.matches.length, "матч", "матчі", "матчів")}</div><div><b>${DATA.tournaments.length}</b>${pl(DATA.tournaments.length, "турнір", "турніри", "турнірів")}</div></div>
+      <div class="hx-btns"><a class="hb o" href="#schedule">Розклад</a><a class="hb l" href="${DATA.club.ig}">Instagram</a><a class="hb w" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Дзвінок</a></div>
     </section>
     ${up ? `<a class="card accent" href="#tournaments"><span class="tag up">Анонс турніру</span><h3 style="margin:.5rem 0 .3rem;font-size:1.15rem">${up.name}</h3><div class="when">${fmt(up.date)}${up.time ? " о " + up.time : ""}</div>${up.place ? `<div class="note" style="margin:.3rem 0 0">${up.place}</div>` : ""}${up.info ? `<div class="note" style="margin:.3rem 0 0">${up.info}</div>` : ""}<span class="go">Детальніше →</span></a>` : ""}
     <div class="car" id="car">${Object.entries(labels).filter(([id]) => id !== "home").map(([id, t], i) => { const [ic, d, c1, c2] = info[id] || ["•", "", "#1B63BE", "#0F3F7E"]; return `<a class="slide" style="--c:${c1};--c2:${c2};--i:${i}" href="#${id}"><span class="ic">${ic}</span><b>${t}</b><small>${d}</small><span class="arr">→</span></a>`; }).join("")}</div>
     <div class="dots" id="dots">${Object.keys(labels).filter(id => id !== "home").map(() => "<i></i>").join("")}</div>
-    <div class="grid">
-      <div class="card"><h3>Адреса</h3>${DATA.club.addr}</div>
-      <div class="card"><h3>Телефон</h3><a href="tel:${DATA.club.phone.replace(/\s/g, "")}">${DATA.club.phone}</a></div>
-      <div class="card lead"><h3>Лідер рейтингу</h3><div class="who">${av(ranked[0])}<div><b>${ranked[0].name}</b><br>${Math.round(ranked[0].r)}</div></div></div>
-    </div>`;
+    <div class="ct2">
+      <div class="ct2-k">ЯК НАС ЗНАЙТИ</div>
+      <div class="ct2-ad">${DATA.club.addr.replace(", ", ",<br>")}</div>
+      <div class="ct2-ph">${DATA.club.phone}</div>
+      <div class="ct2-bb"><a class="hb l" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(DATA.club.addr)}" target="_blank" rel="noopener">Маршрут</a><a class="hb o" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Подзвонити</a></div>
+    </div>
+    <a class="lb" href="#p-${ranked[0].id}">${av(ranked[0])}<div><small>ЛІДЕР РЕЙТИНГУ</small><b>${ranked[0].name}</b><span>${Math.round(ranked[0].r)} очок →</span></div></a>`;
   },
   schedule: () => `
     <h2>Тренування</h2><p class="sub">Запис на пробне заняття — за телефоном або в Instagram.</p>
@@ -452,7 +494,9 @@ function route() {
   const tm = h.match(/^t-(.+)$/), pm = h.match(/^p-(.+)$/);
   const k = tm ? "tournaments" : pm ? "players" : (h !== "home" && h !== "tournament" && h !== "player" && views[h] ? h : "");
   const app = document.getElementById("app");
-  if (!app.dataset.ok) { app.innerHTML = views.home(); app.dataset.ok = "1"; initCarousel(); }
+  if (!app.dataset.ok) { app.innerHTML = views.home(); app.dataset.ok = "1"; initCarousel();
+    if (matchMedia("(prefers-reduced-motion:reduce)").matches) app.querySelectorAll(".hx animateMotion").forEach(a => { const c = a.parentNode; a.remove(); c.setAttribute("cx", 268); c.setAttribute("cy", 46); });
+  }
   const m = document.getElementById("modal");
   if (k) {
     document.getElementById("mb").innerHTML = tm ? views.tournament(tm[1]) : pm ? views.player(pm[1]) : views[k]();
