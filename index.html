@@ -88,7 +88,9 @@ select.sel{flex:1;min-width:150px;padding:.6rem;border-radius:10px;border:1px so
 .day:before{content:"";display:inline-block;width:.5em;height:.5em;border-radius:50%;background:var(--ball);margin-right:.55em}
 .time{font-family:Unbounded,Onest,sans-serif;font-size:1.25rem;font-weight:600;margin:.3rem 0}
 /* ---- рух і характер ---- */
-.hero{padding-bottom:7.2rem}
+.hero{padding-bottom:7.2rem;text-align:center}
+.hero h1{margin-left:0}
+.hero p{margin:.8rem auto 1.2rem}
 .hero h1{letter-spacing:-.02em}
 .lane{position:absolute;left:0;right:0;bottom:0;height:96px;pointer-events:none;z-index:1;background:linear-gradient(to top,rgba(255,255,255,.14),transparent)}
 .bw{position:absolute;bottom:14px;left:6%;width:30px;height:30px;animation:cross 3.2s linear infinite alternate}
@@ -165,7 +167,7 @@ const DATA = {
   ],
   tournaments: [
     { id: "t1", name: "TT Open #1", date: "2026-11-07", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: B, id: "lutsenko-viktor" }, { g: O, id: "shcherbakov" }] },
-    { id: "t2", name: "TT Open #2", date: "2026-11-15", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "up", info: "Дві ліги: Оранжева та Біла. Запис за телефоном: +380 99 193 41 23" }
+    { id: "t2", name: "TT Open #2", date: "2026-11-15", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "up", info: "Дві ліги: Оранжева та Біла.<br>Запис за телефоном:<br><b style=\"white-space:nowrap\">+380 99 193 41 23</b>" }
   ],
   /* Матчі: дата, гравець A, гравець B, рахунок за партіями, id турніру, ліга */
   matches: [
