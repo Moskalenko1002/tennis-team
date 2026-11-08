@@ -132,7 +132,8 @@ select.sel{flex:1;min-width:150px;padding:.6rem;border-radius:10px;border:1px so
 <div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true"><button class="x" id="mx" aria-label="Закрити">×</button><div class="sc" id="sc"><div id="mb"></div></div></div></div>
 
 <script>
-/* ====== ТУТ ЗМІНЮЄТЬСЯ ВЕСЬ ВМІСТ САЙТУ (зараз — приклади) ====== */
+/* ====== ТУТ ЗМІНЮЄТЬСЯ ВЕСЬ ВМІСТ САЙТУ ====== */
+const B = "Біла ліга", O = "Оранжева ліга"; /* назви ліг: Біла — слабша, Оранжева — сильніша */
 const DATA = {
   club: { ig: "https://www.instagram.com/tennisteam.zp", phone: "+380 99 193 41 23", addr: "Запоріжжя, пр. Соборний, 150а", hours: "" },
   schedule: [
@@ -146,79 +147,79 @@ const DATA = {
   ],
   /* Для кожного гравця можна додати: age, hand, grip, since, bio — вони з’являться в картці */
   players: [
-    { id: "lutsenko-viktor", name: "Луценко Віктор", photo: "photos/lutsenko-viktor.jpg", group: "Молодші", hand: "Права" },
-    { id: "kubar", name: "Кубарь Кирило", photo: "photos/kubar.jpg", group: "Молодші", hand: "Права" },
-    { id: "kublinskyi", name: "Кублинський Вадим", photo: "photos/kublinskyi.jpg", group: "Молодші", hand: "Права" },
-    { id: "perlyk", name: "Перлих Артур", photo: "photos/perlyk.jpg", group: "Молодші", hand: "Права", bio: "Одна з накладок — короткі шипи." },
-    { id: "horbatiuk", name: "Горбатюк Ярослав", photo: "photos/horbatiuk.jpg", group: "Молодші", hand: "Права" },
-    { id: "seomkin", name: "Сьомкін Гліб", photo: "photos/seomkin.jpg", group: "Молодші", hand: "Права" },
-    { id: "yeremenko", name: "Єременко Микита", photo: "photos/yeremenko.jpg", group: "Молодші", hand: "Права" },
-    { id: "spirkach", name: "Спіркач Варвара", photo: "photos/spirkach.jpg", group: "Молодші", hand: "Ліва" },
-    { id: "khvostyk", name: "Хвостик Тимур", photo: "photos/khvostyk.jpg", group: "Молодші", hand: "Права" },
-    { id: "shcherbakov", name: "Щербаков Олександр", photo: "photos/shcherbakov.jpg", group: "Старші", hand: "Права", bio: "Одна з накладок — довгі шипи." },
-    { id: "felskyi", name: "Фельский Ярослав", photo: "photos/felskyi.jpg", group: "Старші", hand: "Права" },
-    { id: "palatakh", name: "Паталах Антон", photo: "photos/palatakh.jpg", group: "Старші", hand: "Права" },
-    { id: "lutsenko-viktoriia", name: "Луценко Вікторія", photo: "photos/lutsenko-viktoriia.jpg", group: "Старші", hand: "Ліва" },
-    { id: "kucheriavyi", name: "Кучерявий Олександр", photo: "photos/kucheriavyi.jpg", group: "Старші", hand: "Права" },
-    { id: "shcherbyna", name: "Щербіна Сергій", photo: "photos/shcherbyna.jpg", group: "Старші", hand: "Права" }
+    { id: "lutsenko-viktor", name: "Луценко Віктор", photo: "photos/lutsenko-viktor.jpg", group: B, hand: "Права" },
+    { id: "kubar", name: "Кубарь Кирило", photo: "photos/kubar.jpg", group: B, hand: "Права" },
+    { id: "kublinskyi", name: "Кублинський Вадим", photo: "photos/kublinskyi.jpg", group: B, hand: "Права" },
+    { id: "perlyk", name: "Перлих Артур", photo: "photos/perlyk.jpg", group: B, hand: "Права", bio: "Одна з накладок — короткі шипи." },
+    { id: "horbatiuk", name: "Горбатюк Ярослав", photo: "photos/horbatiuk.jpg", group: B, hand: "Права" },
+    { id: "seomkin", name: "Сьомкін Гліб", photo: "photos/seomkin.jpg", group: B, hand: "Права" },
+    { id: "yeremenko", name: "Єременко Микита", photo: "photos/yeremenko.jpg", group: B, hand: "Права" },
+    { id: "spirkach", name: "Спіркач Варвара", photo: "photos/spirkach.jpg", group: B, hand: "Ліва" },
+    { id: "khvostyk", name: "Хвостик Тимур", photo: "photos/khvostyk.jpg", group: B, hand: "Права" },
+    { id: "shcherbakov", name: "Щербаков Олександр", photo: "photos/shcherbakov.jpg", group: O, hand: "Права", bio: "Одна з накладок — довгі шипи." },
+    { id: "felskyi", name: "Фельский Ярослав", photo: "photos/felskyi.jpg", group: O, hand: "Права" },
+    { id: "palatakh", name: "Паталах Антон", photo: "photos/palatakh.jpg", group: O, hand: "Права" },
+    { id: "lutsenko-viktoriia", name: "Луценко Вікторія", photo: "photos/lutsenko-viktoriia.jpg", group: O, hand: "Ліва" },
+    { id: "kucheriavyi", name: "Кучерявий Олександр", photo: "photos/kucheriavyi.jpg", group: O, hand: "Права" },
+    { id: "shcherbyna", name: "Щербіна Сергій", photo: "photos/shcherbyna.jpg", group: O, hand: "Права" }
   ],
   tournaments: [
-    { id: "t1", name: "Клубний турнір", date: "2026-11-07", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: "Молодші", id: "lutsenko-viktor" }, { g: "Старші", id: "shcherbakov" }] },
-    { id: "t2", name: "Клубний турнір 2", date: "2026-11-15", time: "12:00", status: "up" }
+    { id: "t1", name: "TT Open #1", date: "2026-11-07", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: B, id: "lutsenko-viktor" }, { g: O, id: "shcherbakov" }] },
+    { id: "t2", name: "TT Open #2", date: "2026-11-15", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "up", info: "Дві ліги: Оранжева та Біла. Запис за телефоном: +380 99 193 41 23" }
   ],
-  /* Матчі: дата, гравець A, гравець B, рахунок за партіями, назва турніру */
+  /* Матчі: дата, гравець A, гравець B, рахунок за партіями, id турніру, ліга */
   matches: [
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "kubar", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "kublinskyi", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "perlyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "horbatiuk", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "seomkin", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "spirkach", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "lutsenko-viktor", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "kublinskyi", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "perlyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "horbatiuk", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "seomkin", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "yeremenko", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kubar", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "perlyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "horbatiuk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "seomkin", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "kublinskyi", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "perlyk", b: "horbatiuk", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "perlyk", b: "seomkin", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "perlyk", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "perlyk", b: "spirkach", sa: 3, sb: 2, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "perlyk", b: "khvostyk", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "horbatiuk", b: "seomkin", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "horbatiuk", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "horbatiuk", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "horbatiuk", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "seomkin", b: "yeremenko", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "seomkin", b: "spirkach", sa: 3, sb: 1, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "seomkin", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "yeremenko", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "yeremenko", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "spirkach", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: "Молодші" },
-    { d: "2026-11-07", a: "shcherbakov", b: "felskyi", sa: 4, sb: 1, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "shcherbakov", b: "palatakh", sa: 4, sb: 1, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "shcherbakov", b: "lutsenko-viktoriia", sa: 4, sb: 1, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "shcherbakov", b: "kucheriavyi", sa: 4, sb: 1, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "shcherbakov", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "felskyi", b: "palatakh", sa: 4, sb: 0, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "felskyi", b: "lutsenko-viktoriia", sa: 4, sb: 1, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "felskyi", b: "kucheriavyi", sa: 4, sb: 2, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "felskyi", b: "shcherbyna", sa: 4, sb: 2, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "palatakh", b: "lutsenko-viktoriia", sa: 4, sb: 2, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "palatakh", b: "kucheriavyi", sa: 4, sb: 2, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "palatakh", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "lutsenko-viktoriia", b: "kucheriavyi", sa: 4, sb: 0, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "lutsenko-viktoriia", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: "Старші" },
-    { d: "2026-11-07", a: "kucheriavyi", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: "Старші" }
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "kubar", sa: 3, sb: 2, tid: "t1", t: B },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "kublinskyi", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "perlyk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "horbatiuk", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "seomkin", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "spirkach", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "lutsenko-viktor", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kubar", b: "kublinskyi", sa: 3, sb: 2, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kubar", b: "perlyk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kubar", b: "horbatiuk", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kubar", b: "seomkin", sa: 3, sb: 2, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kubar", b: "yeremenko", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kubar", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kubar", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kublinskyi", b: "perlyk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kublinskyi", b: "horbatiuk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kublinskyi", b: "seomkin", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kublinskyi", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kublinskyi", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "kublinskyi", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "perlyk", b: "horbatiuk", sa: 3, sb: 2, tid: "t1", t: B },
+    { d: "2026-11-07", a: "perlyk", b: "seomkin", sa: 3, sb: 2, tid: "t1", t: B },
+    { d: "2026-11-07", a: "perlyk", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "perlyk", b: "spirkach", sa: 3, sb: 2, tid: "t1", t: B },
+    { d: "2026-11-07", a: "perlyk", b: "khvostyk", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "horbatiuk", b: "seomkin", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "horbatiuk", b: "yeremenko", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "horbatiuk", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "horbatiuk", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "seomkin", b: "yeremenko", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "seomkin", b: "spirkach", sa: 3, sb: 1, tid: "t1", t: B },
+    { d: "2026-11-07", a: "seomkin", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "yeremenko", b: "spirkach", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "yeremenko", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "spirkach", b: "khvostyk", sa: 3, sb: 0, tid: "t1", t: B },
+    { d: "2026-11-07", a: "shcherbakov", b: "felskyi", sa: 4, sb: 1, tid: "t1", t: O },
+    { d: "2026-11-07", a: "shcherbakov", b: "palatakh", sa: 4, sb: 1, tid: "t1", t: O },
+    { d: "2026-11-07", a: "shcherbakov", b: "lutsenko-viktoriia", sa: 4, sb: 1, tid: "t1", t: O },
+    { d: "2026-11-07", a: "shcherbakov", b: "kucheriavyi", sa: 4, sb: 1, tid: "t1", t: O },
+    { d: "2026-11-07", a: "shcherbakov", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: O },
+    { d: "2026-11-07", a: "felskyi", b: "palatakh", sa: 4, sb: 0, tid: "t1", t: O },
+    { d: "2026-11-07", a: "felskyi", b: "lutsenko-viktoriia", sa: 4, sb: 1, tid: "t1", t: O },
+    { d: "2026-11-07", a: "felskyi", b: "kucheriavyi", sa: 4, sb: 2, tid: "t1", t: O },
+    { d: "2026-11-07", a: "felskyi", b: "shcherbyna", sa: 4, sb: 2, tid: "t1", t: O },
+    { d: "2026-11-07", a: "palatakh", b: "lutsenko-viktoriia", sa: 4, sb: 2, tid: "t1", t: O },
+    { d: "2026-11-07", a: "palatakh", b: "kucheriavyi", sa: 4, sb: 2, tid: "t1", t: O },
+    { d: "2026-11-07", a: "palatakh", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: O },
+    { d: "2026-11-07", a: "lutsenko-viktoriia", b: "kucheriavyi", sa: 4, sb: 0, tid: "t1", t: O },
+    { d: "2026-11-07", a: "lutsenko-viktoriia", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: O },
+    { d: "2026-11-07", a: "kucheriavyi", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: O }
   ]
 };
 const START = 200, K = 32; /* START — стартовий рейтинг, K — наскільки сильно рейтинг змінюється після матчу */
@@ -281,7 +282,7 @@ const views = {
       <p>Клуб настільного тенісу. Тренування, оренда столів, турніри.</p>
       <a class="btn" href="#schedule">Розклад</a> <a class="btn alt" href="${DATA.club.ig}">Instagram</a>
     </section>
-    ${up ? `<a class="card accent" href="#tournaments"><span class="tag up">Анонс турніру</span><h3 style="margin:.5rem 0 .3rem;font-size:1.15rem">${up.name}</h3><div class="when">${fmt(up.date)}${up.time ? " о " + up.time : ""}</div>${up.place ? `<div class="note" style="margin:.3rem 0 0">${up.place}</div>` : ""}<span class="go">Детальніше →</span></a>` : ""}
+    ${up ? `<a class="card accent" href="#tournaments"><span class="tag up">Анонс турніру</span><h3 style="margin:.5rem 0 .3rem;font-size:1.15rem">${up.name}</h3><div class="when">${fmt(up.date)}${up.time ? " о " + up.time : ""}</div>${up.place ? `<div class="note" style="margin:.3rem 0 0">${up.place}</div>` : ""}${up.info ? `<div class="note" style="margin:.3rem 0 0">${up.info}</div>` : ""}<span class="go">Детальніше →</span></a>` : ""}
     <div class="tiles">${Object.entries(labels).filter(([id]) => id !== "home").map(([id, t], i) => `<a class="tile" style="--c:${["#FF7A1A", "#1B63BE", "#1E8E5A"][i % 3]}" href="#${id}">${t}</a>`).join("")}</div>
     <div class="grid">
       <div class="card"><h3>Адреса</h3>${DATA.club.addr}</div>
@@ -305,7 +306,7 @@ const views = {
       const link = t.id && t.status === "done";
       return `<${link ? `a href="#t-${t.id}"` : "div"} class="card"><span class="tag ${t.status}">${t.status === "up" ? "Незабаром" : "Завершено"}</span>
       <h3 style="margin-top:.5rem">${t.name}</h3>${fmt(t.date)}${t.time ? " о " + t.time : ""}${t.place ? "<br>" + t.place : ""}
-      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p>${link ? '<span class="go">Дивитись таблиці →</span>' : ""}</${link ? "a" : "div"}>`;
+      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p>${link ? '<span class="go">Дивитись таблиці →</span>' : ""}${t.status === "up" ? `<a class="btn" style="margin-top:.4rem" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Записатися за телефоном</a>` : ""}</${link ? "a" : "div"}>`;
     }).join("")}</div>`,
   tournament: id => {
     const t = DATA.tournaments.find(x => x.id === id);
