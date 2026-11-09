@@ -202,6 +202,15 @@ a.rk,.sr{text-decoration:none;color:inherit}
 .lb small{display:block;font-size:12px;font-weight:800;letter-spacing:.16em}
 .lb b{display:block;font-family:Unbounded,Onest,sans-serif;font-size:18px;line-height:1.25;margin:2px 0}
 .lb span{font-size:16px;font-weight:700}
+/* ---- карусель на комп'ютері ---- */
+.carw{position:relative}
+.cb{display:none;position:absolute;top:56px;z-index:3;width:44px;height:44px;border-radius:50%;border:0;background:rgba(11,22,36,.88);color:#fff;font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);transition:opacity .2s}
+.cb.pv{left:.2rem}.cb.nx{right:.2rem}
+.cb:disabled{opacity:0;pointer-events:none}
+.cb:focus-visible{outline:3px solid var(--ball);outline-offset:2px}
+@media (hover:hover) and (pointer:fine){.cb{display:grid;place-items:center}.car{cursor:grab}.car.dg{cursor:grabbing;scroll-snap-type:none;user-select:none}}
+.ct2-map{display:block;position:relative;height:150px;border-radius:14px;overflow:hidden;background:#132A44}
+.ct2-map svg{display:block;width:100%;height:100%}
 </style>
 </head>
 <body>
@@ -401,9 +410,18 @@ const views = {
       <div class="hx-btns"><a class="hb o" href="#schedule">Розклад</a><a class="hb l" href="${DATA.club.ig}">Instagram</a><a class="hb w" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Дзвінок</a></div>
     </section>
     ${up ? `<a class="card accent" href="#tournaments"><span class="tag up">Анонс турніру</span><h3 style="margin:.5rem 0 .3rem;font-size:1.15rem">${up.name}</h3><div class="when">${fmt(up.date)}${up.time ? " о " + up.time : ""}</div>${up.place ? `<div class="note" style="margin:.3rem 0 0">${up.place}</div>` : ""}${up.info ? `<div class="note" style="margin:.3rem 0 0">${up.info}</div>` : ""}<span class="go">Детальніше →</span></a>` : ""}
-    <div class="car" id="car">${Object.entries(labels).filter(([id]) => id !== "home").map(([id, t], i) => { const [ic, d, c1, c2] = info[id] || ["•", "", "#1B63BE", "#0F3F7E"]; return `<a class="slide" style="--c:${c1};--c2:${c2};--i:${i}" href="#${id}"><span class="ic">${ic}</span><b>${t}</b><small>${d}</small><span class="arr">→</span></a>`; }).join("")}</div>
+    <div class="carw"><button class="cb pv" type="button" aria-label="Назад">‹</button><button class="cb nx" type="button" aria-label="Далі">›</button><div class="car" id="car">${Object.entries(labels).filter(([id]) => id !== "home").map(([id, t], i) => { const [ic, d, c1, c2] = info[id] || ["•", "", "#1B63BE", "#0F3F7E"]; return `<a class="slide" style="--c:${c1};--c2:${c2};--i:${i}" href="#${id}"><span class="ic">${ic}</span><b>${t}</b><small>${d}</small><span class="arr">→</span></a>`; }).join("")}</div></div>
     <div class="dots" id="dots">${Object.keys(labels).filter(id => id !== "home").map(() => "<i></i>").join("")}</div>
     <div class="ct2">
+      <a class="ct2-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(DATA.club.addr)}" target="_blank" rel="noopener" aria-label="Відкрити адресу на карті">
+        <svg viewBox="0 0 342 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g stroke="#1F3F63" stroke-width="10" fill="none" stroke-linecap="round"><path d="M-10 120 L 352 70"/><path d="M90 -10 L 130 180"/><path d="M230 -10 L 200 180"/></g>
+          <g stroke="#1B3555" stroke-width="4" fill="none"><path d="M-10 40 L 352 20"/><path d="M-10 160 L 352 150"/></g>
+          <circle cx="180" cy="86" r="10" fill="none" stroke="#FF7A1A" stroke-width="2"><animate attributeName="r" values="10;30" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="1.8s" repeatCount="indefinite"/></circle>
+          <path d="M164 50 a16 16 0 1 1 32 0 c0 14 -16 34 -16 34 s-16 -20 -16 -34 z" fill="#FF7A1A"/>
+          <circle cx="180" cy="50" r="6" fill="#0B1624"/>
+        </svg>
+      </a>
       <div class="ct2-k">ЯК НАС ЗНАЙТИ</div>
       <div class="ct2-ad">${DATA.club.addr.replace(", ", ",<br>")}</div>
       <div class="ct2-ph">${DATA.club.phone}</div>
@@ -484,7 +502,17 @@ function initCarousel() {
     sl.forEach((s, k) => { const x = Math.abs(s.offsetLeft - pad() - c.scrollLeft); if (x < b) { b = x; i = k; } });
     if (c.scrollLeft + c.clientWidth >= c.scrollWidth - 2) i = sl.length - 1;
     d.forEach((e, k) => e.classList.toggle("on", k === i));
+    if (pv) { pv.disabled = c.scrollLeft <= 2; nx.disabled = c.scrollLeft + c.clientWidth >= c.scrollWidth - 2; }
   };
+  const pv = document.querySelector(".cb.pv"), nx = document.querySelector(".cb.nx"), step = () => sl[0].offsetWidth + 13;
+  pv.addEventListener("click", () => c.scrollBy({ left: -step(), behavior: "smooth" }));
+  nx.addEventListener("click", () => c.scrollBy({ left: step(), behavior: "smooth" }));
+  let sx = 0, s0 = 0, drag = false, moved = false;
+  c.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse" || e.button) return; drag = true; moved = false; sx = e.clientX; s0 = c.scrollLeft; });
+  addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - sx; if (!moved && Math.abs(dx) > 5) { moved = true; c.classList.add("dg"); } if (moved) c.scrollLeft = s0 - dx; });
+  addEventListener("pointerup", () => { if (!drag) return; drag = false; c.classList.remove("dg"); });
+  c.addEventListener("click", e => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
+  c.addEventListener("dragstart", e => e.preventDefault());
   c.addEventListener("scroll", upd, { passive: true });
   d.forEach((e, k) => e.addEventListener("click", () => c.scrollTo({ left: sl[k].offsetLeft - pad(), behavior: "smooth" })));
   upd();
