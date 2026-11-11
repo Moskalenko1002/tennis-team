@@ -211,6 +211,10 @@ a.rk,.sr{text-decoration:none;color:inherit}
 @media (hover:hover) and (pointer:fine){.cb{display:grid;place-items:center}.car{cursor:grab}.car.dg{cursor:grabbing;scroll-snap-type:none;user-select:none}}
 .ct2-map{display:block;position:relative;height:150px;border-radius:14px;overflow:hidden;background:#132A44}
 .ct2-map svg{display:block;width:100%;height:100%}
+.mr.rk{display:block}
+.rk .l{display:block;color:#FF9A55;font-size:.7rem;font-weight:800;letter-spacing:.12em;margin-bottom:2px}
+.rk b{display:block;color:#fff}
+.rk .d{display:block;color:#93A3B5;font-size:.85rem;line-height:1.4;margin-top:2px}
 </style>
 </head>
 <body>
@@ -243,7 +247,7 @@ const DATA = {
     { id: "horbatiuk", name: "Горбатюк Ярослав", photo: "photos/gorbatyuk.jpg", group: B, born: 2013, hand: "Права" },
     { id: "seomkin", name: "Сьомкін Гліб", photo: "photos/seomkin.jpg", group: B, born: 2012, hand: "Права" },
     { id: "yeremenko", name: "Єременко Микита", photo: "photos/yeremenko.jpg", group: B, born: 2017, hand: "Права" },
-    { id: "spirkach", name: "Спіркач Варвара", photo: "photos/spirkach.jpg", group: B, born: 2010, hand: "Ліва" },
+    { id: "spirkach", name: "Спіркач Варвара", photo: "photos/spirkach.jpg", group: B, born: 2010, hand: "Ліва", racket: { blade: ["Imperial Primus Junior", "Дитяча основа: менший розмір і вага, ручка під дитячу руку. Атакуюча, але не надто швидка — зручна для постановки техніки."], rubbers: [["Tibhar Evolution FX-P · червона", "Найм’якша накладка серії Evolution з високим натягом верхнього шару. Дуже багато обертання й контролю, швидкість помірна. Добра для гри біля столу, накатів і контратак."], ["Friendship RITC 729 · синя", "Класична китайська накладка: липкий верх і жорстка губка. Сильне обертання, контрольована швидкість, удар відчувається прямим і жорстким."]] } },
     { id: "khvostyk", name: "Хвостик Тимур", photo: "photos/khvostyk.jpg", group: B, born: 2018, hand: "Права" },
     { id: "shcherbakov", name: "Щербаков Олександр", photo: "photos/shcherbakov.jpg", group: O, born: 2011, hand: "Права", bio: "Одна з накладок — довгі шипи." },
     { id: "felskyi", name: "Фельський Ярослав", photo: "photos/felskyi.jpg", group: O, born: 2012, hand: "Права" },
@@ -489,6 +493,7 @@ const views = {
       ${tl ? `<h3>Турніри</h3>${tl}` : ""}
       <h3>Останні матчі</h3>${last || `<p class="ps">Матчів поки немає.</p>`}
       ${det || p.bio ? `<h3>Про гравця</h3>${det}${p.bio ? `<p class="ps" style="margin:.6rem 0 0">${p.bio}</p>` : ""}` : ""}
+      ${p.racket ? `<h3>Ракетка</h3><div class="mr rk"><small class="l">ОСНОВА</small><b>${p.racket.blade[0]}</b><span class="d">${p.racket.blade[1]}</span></div>${p.racket.rubbers.map((r, i) => `<div class="mr rk"><small class="l">НАКЛАДКА ${i + 1}</small><b>${r[0]}</b><span class="d">${r[1]}</span></div>`).join("")}` : ""}
     </div>`;
   }
 };
