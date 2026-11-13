@@ -211,24 +211,55 @@ a.rk,.sr{text-decoration:none;color:inherit}
 @media (hover:hover) and (pointer:fine){.cb{display:grid;place-items:center}.car{cursor:grab}.car.dg{cursor:grabbing;scroll-snap-type:none;user-select:none}}
 .ct2-map{display:block;position:relative;height:150px;border-radius:14px;overflow:hidden;background:#132A44}
 .ct2-map svg{display:block;width:100%;height:100%}
-.mr.rk{display:block}
-.rk .l{display:block;color:#FF9A55;font-size:.7rem;font-weight:800;letter-spacing:.12em;margin-bottom:2px}
-.rk b{display:block;color:#fff}
-.rk .d{display:block;color:#93A3B5;font-size:.85rem;line-height:1.4;margin-top:2px}
+/* ---- бокове меню ---- */
+.mnb{display:grid;place-items:center;width:44px;height:44px;margin-left:-.5rem;border:0;border-radius:12px;background:transparent;color:var(--ink);cursor:pointer;flex:none}
+.mnb:focus-visible,.mn2:focus-visible{outline:3px solid var(--ball);outline-offset:2px}
+.mn2{position:absolute;top:.7rem;left:.8rem;width:40px;height:40px;border-radius:50%;border:0;background:var(--line);color:var(--ink);cursor:pointer;z-index:2;display:grid;place-items:center}
+.dr-scrim{position:fixed;inset:0;z-index:40;background:rgba(5,15,28,.55);opacity:0;transition:opacity .25s}
+.dr-scrim.on{opacity:1}
+.dr-scrim[hidden]{display:none}
+.drawer{position:fixed;top:0;bottom:0;left:0;z-index:50;width:min(82vw,300px);background:#0B1624;color:#fff;display:flex;flex-direction:column;gap:.25rem;padding:calc(env(safe-area-inset-top,0px) + 14px) 12px calc(env(safe-area-inset-bottom,0px) + 14px);overflow-y:auto;transform:translateX(-100%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s .28s;box-shadow:6px 0 30px rgba(0,0,0,.35)}
+.drawer.open{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.dr-top{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 14px}
+.dr-x{width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:24px;line-height:1;cursor:pointer}
+.drawer nav{display:flex;flex-direction:column;gap:2px}
+.drawer a{display:flex;align-items:center;gap:14px;min-height:50px;padding:0 14px;border-radius:14px;color:#E6EDF5;text-decoration:none;font-weight:600;font-size:16px}
+.drawer a .di{width:26px;text-align:center;font-size:20px}
+.drawer a.on{background:rgba(255,122,26,.18);color:#fff;box-shadow:inset 4px 0 0 #FF7A1A}
+.drawer a:focus-visible,.dr-x:focus-visible{outline:3px solid #FF7A1A;outline-offset:2px}
+.dr-sep{height:1px;background:rgba(255,255,255,.12);margin:10px 8px}
+/* ---- запис на турнір ---- */
+.su{margin-top:1.6rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1rem}
+.su h3{font-size:1.1rem}
+.su label{display:block;font-weight:600;font-size:.9rem;margin:.8rem 0 .25rem}
+.su input,.su select,.su textarea{width:100%;min-height:44px;padding:.65rem .8rem;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;box-sizing:border-box}
+.su input:focus-visible,.su select:focus-visible,.su textarea:focus-visible{outline:3px solid var(--ball);outline-offset:1px}
+.su .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.su-err{color:#C0392B;font-weight:600;min-height:1.3em;margin:.6rem 0 .4rem}
+.su-ok{background:var(--bg);border-radius:12px;padding:1rem}
+.su-msg{white-space:pre-wrap;word-break:break-word;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.7rem;margin:.8rem 0;font:inherit;font-size:.9rem}
+.su-row{display:flex;flex-wrap:wrap;gap:.5rem}
+.mr .k{white-space:nowrap}
 </style>
 </head>
 <body>
 <header><div class="bar">
+<button class="mnb" id="mnb" type="button" aria-label="Меню" aria-expanded="false" aria-controls="drawer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 <a class="logo" href="#home"><i></i>TennisTeam</a>
 </div></header>
 <main id="app"></main>
-<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true"><button class="x" id="mx" aria-label="Закрити">×</button><div class="sc" id="sc"><div id="mb"></div></div></div></div>
+<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true"><button class="mn2" id="mn2" type="button" aria-label="Меню"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><button class="x" id="mx" aria-label="Закрити">×</button><div class="sc" id="sc"><div id="mb"></div></div></div></div>
+
+<div class="dr-scrim" id="drs" hidden></div>
+<aside class="drawer" id="drawer" aria-label="Меню розділів" aria-hidden="true"></aside>
 
 <script>
 /* ====== ТУТ ЗМІНЮЄТЬСЯ ВЕСЬ ВМІСТ САЙТУ ====== */
 const B = "Біла ліга", O = "Оранжева ліга"; /* назви ліг: Біла — слабша, Оранжева — сильніша */
 const DATA = {
   club: { ig: "https://www.instagram.com/tennisteam.zp", phone: "+380 99 193 41 23", addr: "Запоріжжя, пр. Соборний, 150а", hours: "" },
+  /* Запис на турнір: endpoint — адреса скрипта, що пересилає заявку в Telegram (див. інструкцію); viber — номер для чату; tg — username без @ (або порожньо) */
+  signup: { endpoint: "", viber: "+380 99 193 41 23", tg: "" },
   schedule: [
     { title: "Групові тренування", days: ["Понеділок", "Середа", "П’ятниця"], time: "17:30–19:00", coach: "Москаленко Єгор Олександрович" },
     { title: "Індивідуальні тренування", days: ["Усі інші дні"], time: "За домовленістю", note: "Також тренування для 2 або 4 осіб", coach: "Москаленко Єгор Олександрович" },
@@ -247,7 +278,7 @@ const DATA = {
     { id: "horbatiuk", name: "Горбатюк Ярослав", photo: "photos/gorbatyuk.jpg", group: B, born: 2013, hand: "Права" },
     { id: "seomkin", name: "Сьомкін Гліб", photo: "photos/seomkin.jpg", group: B, born: 2012, hand: "Права" },
     { id: "yeremenko", name: "Єременко Микита", photo: "photos/yeremenko.jpg", group: B, born: 2017, hand: "Права" },
-    { id: "spirkach", name: "Спіркач Варвара", photo: "photos/spirkach.jpg", group: B, born: 2010, hand: "Ліва", racket: { blade: ["Imperial Primus Junior", "Дитяча основа: менший розмір і вага, ручка під дитячу руку. Атакуюча, але не надто швидка — зручна для постановки техніки."], rubbers: [["Tibhar Evolution FX-P · червона", "Найм’якша накладка серії Evolution з високим натягом верхнього шару. Дуже багато обертання й контролю, швидкість помірна. Добра для гри біля столу, накатів і контратак."], ["Friendship RITC 729 · синя", "Класична китайська накладка: липкий верх і жорстка губка. Сильне обертання, контрольована швидкість, удар відчувається прямим і жорстким."]] } },
+    { id: "spirkach", name: "Спіркач Варвара", photo: "photos/spirkach.jpg", group: B, born: 2010, hand: "Ліва", racket: { blade: "Imperial Primus Junior", rubbers: ["Tibhar Evolution FX-P · червона", "Friendship RITC 729 · синя"] } },
     { id: "khvostyk", name: "Хвостик Тимур", photo: "photos/khvostyk.jpg", group: B, born: 2018, hand: "Права" },
     { id: "shcherbakov", name: "Щербаков Олександр", photo: "photos/shcherbakov.jpg", group: O, born: 2011, hand: "Права", bio: "Одна з накладок — довгі шипи." },
     { id: "felskyi", name: "Фельський Ярослав", photo: "photos/felskyi.jpg", group: O, born: 2012, hand: "Права" },
@@ -385,6 +416,57 @@ function renderH2H() {
   return `<div class="grid" style="grid-template-columns:1fr 1fr"><div class="card" style="border-top:4px solid var(--ball)"><h3>${P[H.a].name}</h3><div class="big">${pct(wa, ms.length)}</div>${wa} з ${ms.length}</div><div class="card" style="border-top:4px solid var(--table)"><h3>${P[H.b].name}</h3><div class="big">${pct(wb, ms.length)}</div>${wb} з ${ms.length}</div></div><div class="vs" aria-hidden="true"><i style="width:${100 * wa / ms.length}%"></i></div><div class="card"><h3>Усі зустрічі</h3>${rows}</div>`;
 }
 const pl = (n, a, b, c) => n % 10 === 1 && n % 100 !== 11 ? a : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c;
+function signupForm() {
+  const t = DATA.tournaments.find(x => x.status === "up");
+  if (!t) return "";
+  return `<div class="su" id="su">
+    <h3>Запис на ${t.name}</h3>
+    <p class="sub">${fmt(t.date)}${t.time ? " о " + t.time : ""}. Заповніть форму — заявка піде тренеру.</p>
+    <form id="suf" onsubmit="return signup(event)" novalidate>
+      <label>Ім’я та прізвище<input name="name" autocomplete="name" required></label>
+      <label>Вік<input name="age" inputmode="numeric" autocomplete="off"></label>
+      <label>Ліга<select name="league"><option>Не знаю — підкажіть</option><option>${O}</option><option>${B}</option></select></label>
+      <label>Телефон<input name="phone" type="tel" autocomplete="tel" placeholder="+380 …" required></label>
+      <label>Коментар (необов’язково)<textarea name="comment" rows="2"></textarea></label>
+      <input name="site" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p class="su-err" role="alert"></p>
+      <button class="btn" type="submit" style="border:0;cursor:pointer;font:inherit;font-weight:700">Записатися</button>
+    </form>
+    <div class="su-ok" id="suok" hidden></div>
+  </div>`;
+}
+function signup(e) {
+  e.preventDefault();
+  const f = e.target, v = n => f.elements[n].value.trim(), err = f.querySelector(".su-err");
+  if (v("site")) return false;
+  err.textContent = "";
+  const phone = v("phone");
+  if (v("name").length < 3) { err.textContent = "Вкажіть ім’я та прізвище."; return false; }
+  if (phone.replace(/\D/g, "").length < 10) { err.textContent = "Вкажіть номер телефону (мінімум 10 цифр)."; return false; }
+  const t = DATA.tournaments.find(x => x.status === "up");
+  const msg = ["🏓 Запис на " + t.name + " (" + fmt(t.date) + (t.time ? ", " + t.time : "") + ")", "Ім’я: " + v("name"), "Вік: " + (v("age") || "—"), "Ліга: " + v("league"), "Телефон: " + phone, v("comment") ? "Коментар: " + v("comment") : ""].filter(Boolean).join("\n");
+  const btn = f.querySelector("button[type=submit]");
+  if (DATA.signup.endpoint) {
+    btn.disabled = true; btn.textContent = "Надсилаємо…";
+    fetch(DATA.signup.endpoint, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ text: msg }) })
+      .then(() => { f.hidden = true; showSignupOk("Дякуємо! Заявку надіслано — тренер зв’яжеться з вами."); })
+      .catch(() => { btn.disabled = false; btn.textContent = "Записатися"; f.hidden = true; manualSignup(msg); });
+  } else { f.hidden = true; manualSignup(msg); }
+  return false;
+}
+function showSignupOk(text) { const o = document.getElementById("suok"); o.hidden = false; o.innerHTML = ""; const p = document.createElement("p"); p.style.margin = "0"; p.textContent = text; o.appendChild(p); return o; }
+function manualSignup(msg) {
+  try { navigator.clipboard.writeText(msg); } catch (x) { }
+  const o = showSignupOk("Майже готово! Текст заявки скопійовано. Відкрийте чат і вставте його (довге натискання → Вставити).");
+  const pre = document.createElement("pre"); pre.className = "su-msg"; pre.textContent = msg; o.appendChild(pre);
+  const row = document.createElement("div"); row.className = "su-row";
+  const viber = (DATA.signup.viber || "").replace(/\s/g, "");
+  if (viber) row.insertAdjacentHTML("beforeend", `<a class="btn" href="viber://chat?number=${encodeURIComponent(viber)}">Відкрити Viber</a>`);
+  if (DATA.signup.tg) row.insertAdjacentHTML("beforeend", `<a class="btn alt" style="color:var(--ink)" href="https://t.me/${encodeURIComponent(DATA.signup.tg)}" target="_blank" rel="noopener">Відкрити Telegram</a>`);
+  const cp = document.createElement("button"); cp.type = "button"; cp.className = "btn alt"; cp.style.cssText = "color:var(--ink);cursor:pointer;font:inherit;font-weight:700;border:0"; cp.textContent = "Скопіювати ще раз";
+  cp.onclick = () => { try { navigator.clipboard.writeText(msg); cp.textContent = "Скопійовано ✓"; } catch (x) { } };
+  row.appendChild(cp); o.appendChild(row);
+}
 const views = {
   home: () => {
     const up = DATA.tournaments.filter(t => t.status === "up").sort((x, y) => x.date.localeCompare(y.date))[0];
@@ -449,8 +531,8 @@ const views = {
       const link = t.id && t.status === "done";
       return `<${link ? `a href="#t-${t.id}"` : "div"} class="card"><span class="tag ${t.status}">${t.status === "up" ? "Незабаром" : "Завершено"}</span>
       <h3 style="margin-top:.5rem">${t.name}</h3>${fmt(t.date)}${t.time ? " о " + t.time : ""}${t.place ? "<br>" + t.place : ""}
-      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p>${link ? '<span class="go">Дивитись таблиці →</span>' : ""}${t.status === "up" ? `<a class="btn" style="margin-top:.4rem" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Записатися за телефоном</a>` : ""}</${link ? "a" : "div"}>`;
-    }).join("")}</div>`,
+      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p>${link ? '<span class="go">Дивитись таблиці →</span>' : ""}${t.status === "up" ? `<button class="btn" type="button" style="margin-top:.4rem;border:0;cursor:pointer;font:inherit;font-weight:700" onclick="document.getElementById('su').scrollIntoView({behavior:'smooth'})">Записатися онлайн</button> <a class="btn alt" style="margin-top:.4rem;color:var(--ink)" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Або зателефонувати</a>` : ""}</${link ? "a" : "div"}>`;
+    }).join("")}</div>${signupForm()}`,
   tournament: id => {
     const t = DATA.tournaments.find(x => x.id === id);
     if (!t) return views.tournaments();
@@ -493,7 +575,7 @@ const views = {
       ${tl ? `<h3>Турніри</h3>${tl}` : ""}
       <h3>Останні матчі</h3>${last || `<p class="ps">Матчів поки немає.</p>`}
       ${det || p.bio ? `<h3>Про гравця</h3>${det}${p.bio ? `<p class="ps" style="margin:.6rem 0 0">${p.bio}</p>` : ""}` : ""}
-      ${p.racket ? `<h3>Ракетка</h3><div class="mr rk"><small class="l">ОСНОВА</small><b>${p.racket.blade[0]}</b><span class="d">${p.racket.blade[1]}</span></div>${p.racket.rubbers.map((r, i) => `<div class="mr rk"><small class="l">НАКЛАДКА ${i + 1}</small><b>${r[0]}</b><span class="d">${r[1]}</span></div>`).join("")}` : ""}
+      ${p.racket ? `<h3>Ракетка</h3><div class="mr"><span class="k">Основа</span><b>${p.racket.blade}</b></div>${p.racket.rubbers.map((r, i) => `<div class="mr"><span class="k">Накладка ${i + 1}</span><b>${r}</b></div>`).join("")}` : ""}
     </div>`;
   }
 };
@@ -522,6 +604,43 @@ function initCarousel() {
   d.forEach((e, k) => e.addEventListener("click", () => c.scrollTo({ left: sl[k].offsetLeft - pad(), behavior: "smooth" })));
   upd();
 }
+const ICON = { home: "🏠", schedule: "🏓", rent: "📅", tournaments: "🏆", rating: "📈", players: "👥", stats: "📊" };
+const drawer = document.getElementById("drawer"), scrim = document.getElementById("drs"), mnb = document.getElementById("mnb");
+let lastFocus = null, prevOverflow = "";
+function buildDrawer() {
+  const up = DATA.tournaments.find(x => x.status === "up");
+  drawer.innerHTML = `<div class="dr-top"><div class="hx-logo"><i></i>TennisTeam</div><button class="dr-x" type="button" aria-label="Закрити меню">×</button></div>
+    <nav>${Object.entries(labels).map(([id, t]) => `<a href="#${id}" data-id="${id}"><span class="di" aria-hidden="true">${ICON[id] || "•"}</span>${t}</a>`).join("")}</nav>
+    <div class="dr-sep"></div>
+    <nav>${up ? `<a href="#tournaments" data-su="1"><span class="di" aria-hidden="true">✍️</span>Записатися на ${up.name}</a>` : ""}<a href="tel:${DATA.club.phone.replace(/\s/g, "")}"><span class="di" aria-hidden="true">📞</span>Зателефонувати</a><a href="${DATA.club.ig}"><span class="di" aria-hidden="true">📷</span>Instagram</a></nav>`;
+}
+function markActive() {
+  const h = (location.hash || "#home").slice(1), id = /^t-/.test(h) ? "tournaments" : /^p-/.test(h) ? "players" : labels[h] ? h : "home";
+  drawer.querySelectorAll("nav a[data-id]").forEach(a => a.classList.toggle("on", a.dataset.id === id));
+}
+function openDrawer() {
+  lastFocus = document.activeElement;
+  drawer.classList.add("open"); drawer.setAttribute("aria-hidden", "false"); mnb.setAttribute("aria-expanded", "true");
+  scrim.hidden = false; requestAnimationFrame(() => scrim.classList.add("on"));
+  prevOverflow = document.body.style.overflow; document.body.style.overflow = "hidden";
+  (drawer.querySelector("a.on") || drawer.querySelector("a")).focus({ preventScroll: true });
+}
+function closeDrawer() {
+  if (!drawer.classList.contains("open")) return;
+  drawer.classList.remove("open"); drawer.setAttribute("aria-hidden", "true"); mnb.setAttribute("aria-expanded", "false");
+  scrim.classList.remove("on"); setTimeout(() => { if (!drawer.classList.contains("open")) scrim.hidden = true; }, 260);
+  document.body.style.overflow = prevOverflow;
+  if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+}
+mnb.addEventListener("click", openDrawer);
+document.getElementById("mn2").addEventListener("click", openDrawer);
+scrim.addEventListener("click", closeDrawer);
+drawer.addEventListener("click", e => {
+  if (e.target.closest(".dr-x")) return closeDrawer();
+  const a = e.target.closest("a"); if (!a) return;
+  closeDrawer();
+  if (a.dataset.su) setTimeout(() => { const el = document.getElementById("su"); if (el) el.scrollIntoView({ behavior: "smooth" }); }, 200);
+});
 function route() {
   const h = (location.hash || "#home").slice(1);
   const tm = h.match(/^t-(.+)$/), pm = h.match(/^p-(.+)$/);
@@ -537,12 +656,13 @@ function route() {
     document.getElementById("sc").scrollTop = 0;
     document.getElementById("mx").focus({ preventScroll: true });
   } else { m.hidden = true; document.body.style.overflow = ""; }
+  markActive();
 }
 const closeM = () => { location.hash = "#home"; };
 document.getElementById("mx").addEventListener("click", closeM);
 document.getElementById("modal").addEventListener("click", e => { if (e.target.id === "modal") closeM(); });
-addEventListener("keydown", e => { if (e.key === "Escape") closeM(); });
-addEventListener("hashchange", route); route();
+addEventListener("keydown", e => { if (e.key === "Escape") { if (drawer.classList.contains("open")) closeDrawer(); else closeM(); } });
+buildDrawer(); addEventListener("hashchange", route); route();
 </script>
 </body>
 </html>
