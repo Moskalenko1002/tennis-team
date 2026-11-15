@@ -285,11 +285,16 @@ const DATA = {
     { id: "palatakh", name: "Паталах Антон", photo: "photos/palatakh.jpg", group: O, born: 1978, hand: "Права" },
     { id: "lutsenko-viktoriia", name: "Луценко Вікторія", photo: "photos/lutsenko-viktoriia.jpg", group: O, born: 2012, hand: "Ліва" },
     { id: "kucheriavyi", name: "Кучерявий Олександр", photo: "photos/kucheriavyi.jpg", group: O, born: 1985, hand: "Права" },
-    { id: "shcherbyna", name: "Щербіна Сергій", photo: "photos/shcherbyna.jpg", group: O, born: 1983, hand: "Права" }
+    { id: "shcherbyna", name: "Щербіна Сергій", photo: "photos/shcherbyna.jpg", group: O, born: 1983, hand: "Права" },
+    { id: "rohozniy", name: "Рогозний Андрій", photo: "photos/rohozniy.jpg", group: O, born: 2001 },
+    { id: "miniailo", name: "Міняйло Сергій", photo: "photos/miniailo.jpg", group: O, born: 1977 },
+    { id: "lunen", name: "Лунен Сергій", photo: "photos/lunen.jpg", group: O, born: 1964 },
+    { id: "buhrinov-r", name: "Бугрінов Руслан", photo: "photos/buhrinov-r.jpg", group: O, born: 1989 },
+    { id: "buhrinov-m", name: "Бугрінов Максим", photo: "photos/buhrinov-m.jpg", group: O, born: 2010 }
   ],
   tournaments: [
     { id: "t1", name: "TT Open #1", date: "2026-11-07", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: B, id: "lutsenko-viktor" }, { g: O, id: "shcherbakov" }] },
-    { id: "t2", name: "TT Open #2", date: "2026-11-15", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "up", info: "Дві ліги: Оранжева та Біла.<br>Запис за телефоном:<br><b style=\"white-space:nowrap\">+380 99 193 41 23</b>" }
+    { id: "t2", name: "TT Open #2", date: "2026-11-15", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: O, id: "shcherbakov" }] }
   ],
   /* Матчі: дата, гравець A, гравець B, рахунок за партіями, id турніру, ліга */
   matches: [
@@ -343,7 +348,43 @@ const DATA = {
     { d: "2026-11-07", a: "palatakh", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: O },
     { d: "2026-11-07", a: "lutsenko-viktoriia", b: "kucheriavyi", sa: 4, sb: 0, tid: "t1", t: O },
     { d: "2026-11-07", a: "lutsenko-viktoriia", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: O },
-    { d: "2026-11-07", a: "kucheriavyi", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: O }
+    { d: "2026-11-07", a: "kucheriavyi", b: "shcherbyna", sa: 4, sb: 1, tid: "t1", t: O },
+    { d: "2026-11-15", a: "shcherbakov", b: "felskyi", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "shcherbakov", b: "rohozniy", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "shcherbakov", b: "miniailo", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "shcherbakov", b: "horbatiuk", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "shcherbakov", b: "lunen", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "shcherbakov", b: "buhrinov-r", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "shcherbakov", b: "buhrinov-m", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "shcherbakov", b: "yeremenko", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "felskyi", b: "rohozniy", sa: 3, sb: 2, tid: "t2", t: O },
+    { d: "2026-11-15", a: "felskyi", b: "miniailo", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "felskyi", b: "horbatiuk", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "felskyi", b: "lunen", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "felskyi", b: "buhrinov-r", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "felskyi", b: "buhrinov-m", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "felskyi", b: "yeremenko", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "rohozniy", b: "miniailo", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "rohozniy", b: "horbatiuk", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "rohozniy", b: "lunen", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "rohozniy", b: "buhrinov-r", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "rohozniy", b: "buhrinov-m", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "rohozniy", b: "yeremenko", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "miniailo", b: "horbatiuk", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "miniailo", b: "lunen", sa: 3, sb: 2, tid: "t2", t: O },
+    { d: "2026-11-15", a: "miniailo", b: "buhrinov-r", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "miniailo", b: "buhrinov-m", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "miniailo", b: "yeremenko", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "horbatiuk", b: "lunen", sa: 3, sb: 1, tid: "t2", t: O },
+    { d: "2026-11-15", a: "horbatiuk", b: "buhrinov-r", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "horbatiuk", b: "buhrinov-m", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "horbatiuk", b: "yeremenko", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "lunen", b: "buhrinov-r", sa: 3, sb: 1, tid: "t2", t: O },
+    { d: "2026-11-15", a: "lunen", b: "buhrinov-m", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "lunen", b: "yeremenko", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "buhrinov-r", b: "buhrinov-m", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "buhrinov-r", b: "yeremenko", sa: 3, sb: 0, tid: "t2", t: O },
+    { d: "2026-11-15", a: "buhrinov-m", b: "yeremenko", sa: 3, sb: 1, tid: "t2", t: O }
   ]
 };
 const START = 200, K = 32; /* START — стартовий рейтинг, K — наскільки сильно рейтинг змінюється після матчу */
