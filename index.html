@@ -240,6 +240,12 @@ a.rk,.sr{text-decoration:none;color:inherit}
 .su-msg{white-space:pre-wrap;word-break:break-word;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.7rem;margin:.8rem 0;font:inherit;font-size:.9rem}
 .su-row{display:flex;flex-wrap:wrap;gap:.5rem}
 .mr .k{white-space:nowrap}
+.rc{touch-action:pan-y;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rc:focus-visible{outline:2px solid #FF7A1A;outline-offset:4px;border-radius:8px}
+.rci{margin-top:.8rem;padding:.8rem 1rem;border-radius:14px;background:rgba(255,255,255,.07);min-height:7rem}
+.rcv{font-family:Unbounded,Onest,sans-serif;font-weight:800;font-size:1.5rem}
+.rcd{font-size:1rem}.rcd.u{color:#4FD19A}.rcd.d{color:#FF7272}
+.rcm{color:#93A3B5;font-size:.9rem}.rcm b{color:#fff}
 </style>
 </head>
 <body>
@@ -434,12 +440,39 @@ function placeIn(gm, pid) {
   const ord = Object.keys(S).sort((x, y) => pts(y) - pts(x) || S[y].d - S[x].d);
   return [ord.indexOf(pid) + 1, ord.length];
 }
-function ratingChart(rh) {
+const esc = x => String(x).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function ratingChart(p) {
+  const rh = p.rh;
   if (rh.length < 2) return `<p class="ps">Матчів поки немає.</p>`;
   const W = 320, T = 130, px = 14, py = 18, lo = Math.min(...rh), span = Math.max(Math.max(...rh) - lo, 1);
   const pts = rh.map((v, i) => [(px + i * (W - 2 * px) / (rh.length - 1)).toFixed(1), (T - py - (v - lo) / span * (T - 2 * py)).toFixed(1)]);
-  const line = pts.map(p => p.join(",")).join(" ");
-  return `<svg class="rc" viewBox="0 0 ${W} ${T}" role="img" aria-label="Динаміка рейтингу"><polygon points="${pts[0][0]},${T - py} ${line} ${pts[pts.length - 1][0]},${T - py}" fill="rgba(255,122,26,.16)"/><polyline points="${line}" fill="none" stroke="#FF7A1A" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#FF7A1A"/>`).join("")}</svg><div class="rcl"><span>старт ${Math.round(rh[0])}</span><span>зараз <b>${Math.round(rh[rh.length - 1])}</b></span></div>`;
+  const line = pts.map(q => q.join(",")).join(" ");
+  return `<svg class="rc" data-pid="${p.id}" viewBox="0 0 ${W} ${T}" tabindex="0" role="img" aria-label="Динаміка рейтингу. Торкніться точки або користуйтеся стрілками вліво і вправо, щоб побачити рейтинг після кожного матчу"><polygon points="${pts[0][0]},${T - py} ${line} ${pts[pts.length - 1][0]},${T - py}" fill="rgba(255,122,26,.16)"/><line class="gl" y1="6" y2="${T - 6}" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-dasharray="3 4" visibility="hidden"/><polyline points="${line}" fill="none" stroke="#FF7A1A" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${pts.map(q => `<circle class="cp" cx="${q[0]}" cy="${q[1]}" r="4" fill="#FF7A1A"/>`).join("")}<circle class="sel" r="7" fill="#fff" stroke="#FF7A1A" stroke-width="3" visibility="hidden"/></svg><div class="rcl"><span>старт ${Math.round(rh[0])}</span><span>зараз <b>${Math.round(rh[rh.length - 1])}</b></span></div><div class="rci" aria-live="polite"></div><p class="ps" style="margin:.5rem 0 0">Торкніться точки на графіку або проведіть пальцем — побачите рейтинг у той момент.</p>`;
+}
+function chartInfo(p, i) {
+  const v = Math.round(p.rh[i]);
+  if (i === 0) return `<div class="rcv">${v}</div><div class="rcm">Старт: початковий рейтинг клубу</div>`;
+  const m = p.h[i - 1], t = DATA.tournaments.find(x => x.id === m.tid), d = Math.round(m.dr);
+  return `<div class="rcv">${v} <span class="rcd ${d >= 0 ? "u" : "d"}">${d >= 0 ? "+" : "−"}${Math.abs(d)}</span></div><div class="rcm">Матч ${i} з ${p.rh.length - 1} · ${sd(m.d)}${t ? " · " + esc(t.name) : ""}</div><div class="rcm">${m.win ? "Перемога над" : "Поразка від"} <b>${esc(P[m.o].name)}</b> · ${m.f}:${m.g}</div>`;
+}
+function bindChart(root) {
+  root.querySelectorAll("svg.rc[data-pid]").forEach(svg => {
+    const p = P[svg.dataset.pid], n = p.rh.length, W = 320, px = 14, box = root.querySelector(".rci");
+    const cps = [...svg.querySelectorAll(".cp")], sel = svg.querySelector(".sel"), gl = svg.querySelector(".gl");
+    let cur = -1;
+    const show = i => {
+      i = Math.max(0, Math.min(n - 1, i)); if (i === cur) return; cur = i;
+      const c = cps[i], x = c.getAttribute("cx"), y = c.getAttribute("cy");
+      sel.setAttribute("cx", x); sel.setAttribute("cy", y); sel.setAttribute("visibility", "visible");
+      gl.setAttribute("x1", x); gl.setAttribute("x2", x); gl.setAttribute("visibility", "visible");
+      box.innerHTML = chartInfo(p, i);
+    };
+    const at = e => { const r = svg.getBoundingClientRect(); show(Math.round(((e.clientX - r.left) * W / r.width - px) / (W - 2 * px) * (n - 1))); };
+    svg.addEventListener("pointerdown", at);
+    svg.addEventListener("pointermove", e => { if (e.pointerType === "mouse" || e.buttons) at(e); });
+    svg.addEventListener("keydown", e => { if (e.key === "ArrowLeft") { show(cur - 1); e.preventDefault(); } else if (e.key === "ArrowRight") { show(cur + 1); e.preventDefault(); } });
+    show(n - 1);
+  });
 }
 const H = { a: "", b: "" };
 function renderH2H() {
@@ -613,7 +646,7 @@ const views = {
     <div class="pcard">
       <div class="ph">${av(p, "sq")}<div class="pi"><span class="lg ${p.group === O ? "o" : "b"}">${p.group || "Гравець"}</span><h2>${p.name}</h2><div class="ps">Гравець TennisTeam${p.born ? " · " + p.born + " р.н." : ""}</div><div class="pn">№ ${String(i + 1).padStart(2, "0")}</div><div class="ps">Місце в рейтингу · <b>${Math.round(p.r)}</b></div></div></div>
       <div class="pt"><div><b>${g}</b><span>Матчів</span></div><div><b>${p.w}</b><span>Перемог</span></div><div><b>${p.l}</b><span>Поразок</span></div><div><b>${pct(p.w, g)}</b><span>Перемог, %</span></div></div>
-      <h3>Динаміка рейтингу</h3>${ratingChart(p.rh)}
+      <h3>Динаміка рейтингу</h3>${ratingChart(p)}
       ${tl ? `<h3>Турніри</h3>${tl}` : ""}
       <h3>Останні матчі</h3>${last || `<p class="ps">Матчів поки немає.</p>`}
       ${det || p.bio ? `<h3>Про гравця</h3>${det}${p.bio ? `<p class="ps" style="margin:.6rem 0 0">${p.bio}</p>` : ""}` : ""}
@@ -694,6 +727,7 @@ function route() {
   const m = document.getElementById("modal");
   if (k) {
     document.getElementById("mb").innerHTML = tm ? views.tournament(tm[1]) : pm ? views.player(pm[1]) : views[k]();
+    bindChart(document.getElementById("mb"));
     m.hidden = false; document.body.style.overflow = "hidden";
     document.getElementById("sc").scrollTop = 0;
     document.getElementById("mx").focus({ preventScroll: true });
