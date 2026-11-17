@@ -300,9 +300,10 @@ const DATA = {
   ],
   tournaments: [
     { id: "t1", name: "TT Open #1", date: "2026-11-07", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: B, id: "lutsenko-viktor" }, { g: O, id: "shcherbakov" }] },
-    { id: "t2", name: "TT Open #2", date: "2026-11-15", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: O, id: "shcherbakov" }] },
+    { id: "t2", name: "TT Open #2", date: "2026-11-15", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: O, id: "shcherbakov" }], draw: { [O]: ["rohozniy", "yeremenko", "miniailo", "horbatiuk", "buhrinov-m", "buhrinov-r", "shcherbakov", "felskyi", "lunen"] } },
     { id: "t3", name: "TT Open #3", date: "2026-11-21", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "up", info: "Дві ліги: Оранжева та Біла.<br>Запис за телефоном:<br><b style=\"white-space:nowrap\">+380 99 193 41 23</b>" }
   ],
+  /* draw (у турнірі) — гравці в порядку номерів жеребкування [1], [2], [3]… Від нього залежить порядок турів (див. rrRound), а отже й підрахунок рейтингу. */
   /* Матчі: дата, гравець A, гравець B, рахунок за партіями, id турніру, ліга */
   matches: [
     { d: "2026-11-07", a: "lutsenko-viktor", b: "kubar", sa: 3, sb: 2, tid: "t1", t: B },
@@ -397,13 +398,33 @@ const DATA = {
 const START = 200, K = 32; /* START — стартовий рейтинг, K — наскільки сильно рейтинг змінюється після матчу */
 /* ====== КІНЕЦЬ НАЛАШТУВАНЬ ====== */
 
+/* ПОРЯДОК ЗУСТРІЧЕЙ (кругова система). Алгоритм ФІКСОВАНИЙ — не змінювати.
+   Гравець №1 — «стрижень»; у турі r він грає з номером N+1−r, решта пар (a, b) задовольняють a+b ≡ 2·(N+1−r) (mod N−1).
+   Для 8 гравців: 1-8,2-7,3-6,5-4 / 1-7,6-8,2-5,3-4 / 1-6,5-7,4-8,2-3 / 1-5,4-6,3-7,2-8 / 1-4,3-5,2-6,7-8 / 1-3,2-4,5-8,6-7 / 1-2,3-8,4-7,5-6.
+   Для непарної кількості додається «фантомний» гравець N+1 (вільний тур). */
+function rrRound(n, i, j) {
+  const N = n % 2 ? n + 1 : n, M = N - 1;
+  if (i > j) [i, j] = [j, i];
+  for (let r = 1; r < N; r++) {
+    const f = N + 1 - r;
+    if (i === 1) { if (j === f) return r; continue; }
+    if (i !== f && j !== f && (i + j - 2 * f) % M === 0) return r;
+  }
+  return 0;
+}
+const rdOf = m => {
+  const t = DATA.tournaments.find(x => x.id === m.tid), dr = t && t.draw && t.draw[m.t];
+  if (!dr) return 0;
+  const i = dr.indexOf(m.a) + 1, j = dr.indexOf(m.b) + 1;
+  return i && j ? rrRound(dr.length, i, j) : 0;
+};
 const P = Object.fromEntries(DATA.players.map(p => [p.id, { ...p, r: START, rh: [START], w: 0, l: 0, h: [] }]));
-[...DATA.matches].sort((x, y) => x.d.localeCompare(y.d)).forEach(m => {
-  const a = P[m.a], b = P[m.b], ea = 1 / (1 + Math.pow(10, (b.r - a.r) / 400)), s = m.sa > m.sb ? 1 : 0;
+[...DATA.matches].sort((x, y) => x.d.localeCompare(y.d) || rdOf(x) - rdOf(y)).forEach(m => {
+  const rd = rdOf(m), a = P[m.a], b = P[m.b], ea = 1 / (1 + Math.pow(10, (b.r - a.r) / 400)), s = m.sa > m.sb ? 1 : 0;
   const dl = K * (s - ea); a.r += dl; b.r -= dl; a.rh.push(a.r); b.rh.push(b.r);
   (s ? (a.w++, b.l++) : (b.w++, a.l++));
-  a.h.push({ d: m.d, o: b.id, f: m.sa, g: m.sb, win: !!s, dr: dl, tid: m.tid });
-  b.h.push({ d: m.d, o: a.id, f: m.sb, g: m.sa, win: !s, dr: -dl, tid: m.tid });
+  a.h.push({ d: m.d, o: b.id, f: m.sa, g: m.sb, win: !!s, dr: dl, tid: m.tid, rd });
+  b.h.push({ d: m.d, o: a.id, f: m.sb, g: m.sa, win: !s, dr: -dl, tid: m.tid, rd });
 });
 const ranked = Object.values(P).sort((x, y) => y.r - x.r);
 const fmt = d => new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" });
@@ -453,7 +474,7 @@ function chartInfo(p, i) {
   const v = Math.round(p.rh[i]);
   if (i === 0) return `<div class="rcv">${v}</div><div class="rcm">Старт: початковий рейтинг клубу</div>`;
   const m = p.h[i - 1], t = DATA.tournaments.find(x => x.id === m.tid), d = Math.round(m.dr);
-  return `<div class="rcv">${v} <span class="rcd ${d >= 0 ? "u" : "d"}">${d >= 0 ? "+" : "−"}${Math.abs(d)}</span></div><div class="rcm">Матч ${i} з ${p.rh.length - 1} · ${sd(m.d)}${t ? " · " + esc(t.name) : ""}</div><div class="rcm">${m.win ? "Перемога над" : "Поразка від"} <b>${esc(P[m.o].name)}</b> · ${m.f}:${m.g}</div>`;
+  return `<div class="rcv">${v} <span class="rcd ${d >= 0 ? "u" : "d"}">${d >= 0 ? "+" : "−"}${Math.abs(d)}</span></div><div class="rcm">Матч ${i} з ${p.rh.length - 1} · ${sd(m.d)}${t ? " · " + esc(t.name) : ""}${m.rd ? " · тур " + m.rd : ""}</div><div class="rcm">${m.win ? "Перемога над" : "Поразка від"} <b>${esc(P[m.o].name)}</b> · ${m.f}:${m.g}</div>`;
 }
 function bindChart(root) {
   root.querySelectorAll("svg.rc[data-pid]").forEach(svg => {
