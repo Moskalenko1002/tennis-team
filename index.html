@@ -246,6 +246,29 @@ a.rk,.sr{text-decoration:none;color:inherit}
 .rcv{font-family:Unbounded,Onest,sans-serif;font-weight:800;font-size:1.5rem}
 .rcd{font-size:1rem}.rcd.u{color:#4FD19A}.rcd.d{color:#FF7272}
 .rcm{color:#93A3B5;font-size:.9rem}.rcm b{color:#fff}
+.how{margin-top:1rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:.8rem 1rem}
+.how summary{margin:0;cursor:pointer;font-weight:700}
+.how p{margin:.6rem 0 0;font-size:.92rem;line-height:1.5}
+/* ---- наживо, тури, адмінка ---- */
+.tag.live{background:#D64545;color:#fff}
+.card.accent.live{border-color:#D64545}
+.ct td.nm a{color:inherit;text-decoration:underline dotted;text-underline-offset:3px;font-weight:600}
+.rd{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.1rem .9rem;margin:.4rem 0}
+.rd summary{margin:0;padding:.6rem 0;font-weight:700;cursor:pointer;color:var(--ink)}
+.rr{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.55rem 0;border-top:1px solid var(--line);font-size:.92rem}
+.rr a{color:inherit;text-decoration:none;font-weight:600}
+.rsc{font-variant-numeric:tabular-nums;white-space:nowrap}.rsc.w{color:var(--ok)}.rsc.l{color:#C0392B}
+.adm-m{cursor:pointer}
+.adm label{display:block}
+#adm label{display:block;font-weight:600;font-size:.9rem;margin:.7rem 0 .25rem}
+#adm input,#adm select{width:100%;min-height:44px;padding:.6rem .8rem;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;box-sizing:border-box}
+.adm-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.adm-tabs,.adm-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0}
+.chip{display:inline-flex;align-items:center;gap:.4rem;min-height:40px;padding:0 .8rem;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+.chip.on{background:var(--ball);border-color:var(--ball);color:#1b1000}
+.chip i{font-style:normal;background:#1b1000;color:#fff;border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-size:.75rem}
+.adm-msg{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem;font-weight:600}
+.adm-k{margin-bottom:.6rem}
 </style>
 </head>
 <body>
@@ -266,6 +289,8 @@ const DATA = {
   club: { ig: "https://www.instagram.com/tennisteam.zp", phone: "+380 99 193 41 23", addr: "Запоріжжя, пр. Соборний, 150а", hours: "" },
   /* Запис на турнір: endpoint — адреса скрипта, що пересилає заявку в Telegram (див. інструкцію); viber — номер для чату; tg — username без @ (або порожньо) */
   signup: { endpoint: "", viber: "+380 99 193 41 23", tg: "" },
+  /* Турнір наживо: endpoint — адреса Google Apps Script (див. інструкцію). Порожньо — функція вимкнена. */
+  live: { endpoint: "" },
   schedule: [
     { title: "Групові тренування", days: ["Понеділок", "Середа", "П’ятниця"], time: "17:30–19:00", coach: "Москаленко Єгор Олександрович" },
     { title: "Індивідуальні тренування", days: ["Усі інші дні"], time: "За домовленістю", note: "Також тренування для 2 або 4 осіб", coach: "Москаленко Єгор Олександрович" },
@@ -396,6 +421,9 @@ const DATA = {
   ]
 };
 const START = 200, K = 32; /* START — стартовий рейтинг, K — наскільки сильно рейтинг змінюється після матчу */
+/* Вклад зустрічі та вага гравця — за українською рейтинговою системою (рахуються окремо, на рейтинг Elo не впливають).
+   R0 — внутрішній стартовий рейтинг української шкали для першого турніру клубу, VCAP — максимум ваги за турнір, BCAP — максимум ваги у формулі. */
+const UR = { R0: 30, VCAP: 20, BCAP: 40 };
 /* ====== КІНЕЦЬ НАЛАШТУВАНЬ ====== */
 
 /* ПОРЯДОК ЗУСТРІЧЕЙ (кругова система). Алгоритм ФІКСОВАНИЙ — не змінювати.
@@ -418,22 +446,63 @@ const rdOf = m => {
   const i = dr.indexOf(m.a) + 1, j = dr.indexOf(m.b) + 1;
   return i && j ? rrRound(dr.length, i, j) : 0;
 };
-const P = Object.fromEntries(DATA.players.map(p => [p.id, { ...p, r: START, rh: [START], w: 0, l: 0, h: [] }]));
+const decay = b => b > 14 ? b - (b / 15) ** 2 : b >= 1 ? b - 1 : 0; /* щомісячне зниження ваги (1-го числа) */
+const n1 = x => x == null ? "—" : x.toFixed(1).replace(".", ",");
+const ASOF = new URLSearchParams(location.search).get("asof") || new Date().toISOString().slice(0, 10); /* ?asof=2027-03-01 — переглянути, як знизиться вага */
+let S, VK, P, ranked; /* S — внутрішній український рейтинг і вага; VK — вклад кожної зустрічі (для переможця); P, ranked — гравці та рейтинг */
+function calcTournament(t) {
+  const ms = DATA.matches.filter(m => m.tid === t.id).sort((x, y) => rdOf(x) - rdOf(y));
+  const ids = [...new Set(ms.flatMap(m => [m.a, m.b]))], R = {}, B = {}, had = ids.filter(i => S[i]);
+  ids.forEach(i => {
+    if (S[i]) { R[i] = S[i].r; B[i] = S[i].b; return; }
+    B[i] = 0;
+    if (!had.length) { R[i] = UR.R0; return; }
+    const beat = [], lost = [];
+    ms.forEach(m => { if (m.a !== i && m.b !== i) return; const o = m.a === i ? m.b : m.a; if (S[o]) ((m.a === i) === (m.sa > m.sb) ? beat : lost).push(S[o].r); });
+    const ro = Math.min(...(lost.length ? [Math.min(...lost)] : []), ...(beat.length ? [Math.max(...beat)] : [])); /* опорний рейтинг новачка */
+    R[i] = isFinite(ro) ? ro : UR.R0;
+  });
+  const pw = {}, ls = {};
+  ids.forEach(i => { pw[i] = 0; ls[i] = 0; });
+  ms.forEach(m => {
+    const aw = m.sa > m.sb, W = aw ? m.a : m.b, L = aw ? m.b : m.a, d = R[W] - R[L];
+    const c = d >= 0 ? (d <= 2 ? 2 : d <= 20 ? 1 : 0) : (5 - d) / 3; /* вклад зустрічі */
+    pw[W] += c; ls[L] += c; VK.set(m, c);
+  });
+  ids.forEach(i => {
+    const nb = B[i] + Math.min(pw[i] + ls[i], UR.VCAP), nr = nb > 0 ? R[i] + (pw[i] - ls[i]) * 10 / Math.min(nb, UR.BCAP) : R[i];
+    S[i] = { r: nr, b: nb };
+  });
+}
+function compute() {
+S = {}; VK = new Map();
+const TT = DATA.tournaments.filter(t => DATA.matches.some(m => m.tid === t.id)).sort((x, y) => x.date.localeCompare(y.date));
+const EV = TT.map(t => ({ d: t.date, t }));
+if (TT.length) {
+  let [yy, mo] = TT[0].date.split("-").map(Number);
+  for (;;) { mo++; if (mo > 12) { mo = 1; yy++; } const d = yy + "-" + String(mo).padStart(2, "0") + "-01"; if (d > ASOF) break; EV.push({ d, m: 1 }); }
+}
+EV.sort((x, y) => x.d.localeCompare(y.d) || (x.m ? 0 : 1) - (y.m ? 0 : 1));
+EV.forEach(e => e.m ? Object.values(S).forEach(q => { q.b = decay(q.b); }) : calcTournament(e.t));
+P = Object.fromEntries(DATA.players.map(p => [p.id, { ...p, r: START, rh: [START], b: S[p.id] ? S[p.id].b : 0, w: 0, l: 0, h: [] }]));
 [...DATA.matches].sort((x, y) => x.d.localeCompare(y.d) || rdOf(x) - rdOf(y)).forEach(m => {
   const rd = rdOf(m), a = P[m.a], b = P[m.b], ea = 1 / (1 + Math.pow(10, (b.r - a.r) / 400)), s = m.sa > m.sb ? 1 : 0;
   const dl = K * (s - ea); a.r += dl; b.r -= dl; a.rh.push(a.r); b.rh.push(b.r);
   (s ? (a.w++, b.l++) : (b.w++, a.l++));
-  a.h.push({ d: m.d, o: b.id, f: m.sa, g: m.sb, win: !!s, dr: dl, tid: m.tid, rd });
-  b.h.push({ d: m.d, o: a.id, f: m.sb, g: m.sa, win: !s, dr: -dl, tid: m.tid, rd });
+  a.h.push({ d: m.d, o: b.id, f: m.sa, g: m.sb, win: !!s, dr: dl, vk: (VK.get(m) || 0) * (s ? 1 : -1), tid: m.tid, rd });
+  b.h.push({ d: m.d, o: a.id, f: m.sb, g: m.sa, win: !s, dr: -dl, vk: (VK.get(m) || 0) * (s ? -1 : 1), tid: m.tid, rd });
 });
-const ranked = Object.values(P).sort((x, y) => y.r - x.r);
+ranked = Object.values(P).sort((x, y) => y.r - x.r);
+}
+const BASE = { players: DATA.players.slice(), tournaments: DATA.tournaments.slice(), matches: DATA.matches.slice() };
+compute();
 const fmt = d => new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" });
 const ini = n => n.split(" ").map(x => x[0]).join("");
 const av = (p, c = "") => `<div class="av ${c}"><span>${ini(p.name)}</span><img src="${p.photo}" alt="${p.name}" loading="lazy" onerror="this.remove()"></div>`;
 
 const pct = (w, g) => g ? Math.round(100 * w / g) + "%" : "—";
-function crossTable(g, gm) {
-  const ids = [...new Set(gm.flatMap(m => [m.a, m.b]))];
+function crossTable(g, gm, all) {
+  const ids = all && all.length ? all : [...new Set(gm.flatMap(m => [m.a, m.b]))];
   const R = {}, S = Object.fromEntries(ids.map(i => [i, { w: 0, l: 0, sf: 0, sa: 0 }]));
   gm.forEach(m => {
     (R[m.a] = R[m.a] || {})[m.b] = [m.sa, m.sb];
@@ -447,7 +516,54 @@ function crossTable(g, gm) {
   const cell = r => r ? `<td class="${r[0] > r[1] ? "w" : "l"}">${r[0]}:${r[1]}</td>` : "<td>–</td>";
   return `<h3 style="margin:1.4rem 0 .6rem">${g}</h3>
     <div class="scroll"><table class="ct"><tr><th>№</th><th>Учасник</th>${ord.map((_, i) => `<th>${i + 1}</th>`).join("")}<th>Ігри (В–П)</th><th>Сети</th><th>Очки</th></tr>
-    ${ord.map((id, i) => `<tr><td>${i + 1}</td><td>${P[id].name}</td>${ord.map(o => o === id ? '<td class="self"></td>' : cell(R[id][o])).join("")}<td>${S[id].w + S[id].l} (${S[id].w}–${S[id].l})</td><td>${S[id].sf}:${S[id].sa}</td><td><b>${pts(id)}</b></td></tr>`).join("")}</table></div>`;
+    ${ord.map((id, i) => `<tr><td>${i + 1}</td><td class="nm"><a href="#p-${id}">${P[id].name}</a></td>${ord.map(o => o === id ? '<td class="self"></td>' : cell((R[id] || {})[o])).join("")}<td>${S[id].w + S[id].l} (${S[id].w}–${S[id].l})</td><td>${S[id].sf}:${S[id].sa}</td><td><b>${pts(id)}</b></td></tr>`).join("")}</table></div>`;
+}
+
+/* ====== ТУРНІР НАЖИВО ====== */
+const LIVE = { items: [], key: "", at: null };
+function groupOrder(gm) {
+  const S2 = {};
+  gm.forEach(m => {
+    [m.a, m.b].forEach(i => S2[i] = S2[i] || { w: 0, l: 0, d: 0 });
+    const w = m.sa > m.sb ? m.a : m.b, l = w === m.a ? m.b : m.a;
+    S2[w].w++; S2[l].l++; S2[m.a].d += m.sa - m.sb; S2[m.b].d += m.sb - m.sa;
+  });
+  return Object.keys(S2).sort((x, y) => (2 * S2[y].w + S2[y].l) - (2 * S2[x].w + S2[x].l) || S2[y].d - S2[x].d);
+}
+function applyLive() {
+  DATA.players = BASE.players.slice(); DATA.tournaments = BASE.tournaments.slice(); DATA.matches = BASE.matches.slice();
+  LIVE.items.forEach(it => {
+    (it.players || []).forEach(p => { if (!DATA.players.some(x => x.id === p.id)) DATA.players.push({ id: p.id, name: p.name, photo: "photos/" + p.id + ".jpg", group: it.groups[0] ? it.groups[0].name : O, born: p.born || undefined }); });
+    if (it.announce) DATA.tournaments = DATA.tournaments.filter(t => t.id !== it.announce);
+    const t = { id: it.id, name: it.name, date: it.date, time: it.time, place: it.place || DATA.club.addr, status: it.status, live: true, draw: {}, to: {} };
+    it.groups.forEach(g => {
+      t.draw[g.name] = g.draw; t.to[g.name] = g.to || 3;
+      Object.entries(g.res || {}).forEach(([k, v]) => {
+        const [i, j] = k.split("-").map(Number), [sa, sb] = v.split(":").map(Number);
+        if (g.draw[i - 1] && g.draw[j - 1]) DATA.matches.push({ d: it.date, a: g.draw[i - 1], b: g.draw[j - 1], sa, sb, tid: it.id, t: g.name });
+      });
+    });
+    if (it.status === "done") t.winners = it.groups.map(g => { const gm = DATA.matches.filter(m => m.tid === it.id && m.t === g.name); return gm.length ? { g: g.name, id: groupOrder(gm)[0] } : null; }).filter(Boolean);
+    DATA.tournaments.push(t);
+  });
+  compute();
+}
+function stamp() { const e = document.getElementById("lvst"); if (e && LIVE.at) e.textContent = "Оновлено " + LIVE.at.toLocaleTimeString("uk-UA"); }
+async function fetchLive(force) {
+  if (!DATA.live.endpoint) return false;
+  try {
+    const r = await fetch(DATA.live.endpoint + (DATA.live.endpoint.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
+    const d = await r.json();
+    if (!d || !d.ok) return false;
+    const key = JSON.stringify(d.items.map(i => [i.id, i.u, i.status]));
+    LIVE.at = new Date();
+    if (force || key !== LIVE.key) { LIVE.items = d.items; LIVE.key = key; applyLive(); route(true); }
+    stamp();
+    return true;
+  } catch (e) { return false; }
+}
+function pollLoop() {
+  (document.hidden ? Promise.resolve() : fetchLive()).finally(() => setTimeout(pollLoop, LIVE.items.some(i => i.status === "live") ? 10000 : 60000));
 }
 const sd = d => new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month: "long" });
 function placeIn(gm, pid) {
@@ -494,6 +610,24 @@ function bindChart(root) {
     svg.addEventListener("keydown", e => { if (e.key === "ArrowLeft") { show(cur - 1); e.preventDefault(); } else if (e.key === "ArrowRight") { show(cur + 1); e.preventDefault(); } });
     show(n - 1);
   });
+}
+function roundsHtml(t, ms) {
+  return Object.entries(t.draw || {}).map(([gname, dr]) => {
+    const gm = ms.filter(m => m.t === gname), n = dr.length, N = n % 2 ? n + 1 : n, res = {};
+    gm.forEach(m => { const i = dr.indexOf(m.a) + 1, j = dr.indexOf(m.b) + 1; res[Math.min(i, j) + "-" + Math.max(i, j)] = i < j ? [m.sa, m.sb] : [m.sb, m.sa]; });
+    const rounds = [];
+    for (let r = 1; r < N; r++) {
+      const pairs = [];
+      for (let i = 1; i <= n; i++) for (let j = i + 1; j <= n; j++) if (rrRound(n, i, j) === r) pairs.push([i, j]);
+      rounds.push(pairs);
+    }
+    const cur = t.status === "live" ? rounds.findIndex(p => p.some(([i, j]) => !res[i + "-" + j])) : -1;
+    const nm = i => `<a href="#p-${dr[i - 1]}">${P[dr[i - 1]] ? P[dr[i - 1]].name : "?"}</a>`;
+    return `<h3 style="margin:1.4rem 0 .4rem">Тури: ${gname}</h3>` + rounds.map((pairs, k) => {
+      const done = pairs.filter(([i, j]) => res[i + "-" + j]).length, busy = new Set(pairs.flat()), bye = n % 2 ? [...Array(n)].map((_, x) => x + 1).filter(x => !busy.has(x)) : [];
+      return `<details class="rd" ${k === cur ? "open" : ""}><summary>Тур ${k + 1} · ${done} з ${pairs.length}${k === cur ? " · зараз" : ""}</summary>${pairs.map(([i, j]) => { const r = res[i + "-" + j]; return `<div class="rr"><span>${nm(i)} — ${nm(j)}</span><b class="rsc ${r ? (r[0] > r[1] ? "w" : "l") : ""}">${r ? r[0] + ":" + r[1] : "—"}</b></div>`; }).join("")}${bye.length ? `<div class="rr"><span class="note" style="margin:0">Вільний тур: ${bye.map(nm).join(", ")}</span></div>` : ""}</details>`;
+    }).join("");
+  }).join("");
 }
 const H = { a: "", b: "" };
 function renderH2H() {
@@ -565,7 +699,7 @@ function manualSignup(msg) {
 }
 const views = {
   home: () => {
-    const up = DATA.tournaments.filter(t => t.status === "up").sort((x, y) => x.date.localeCompare(y.date))[0];
+    const up = DATA.tournaments.filter(t => t.status === "up").sort((x, y) => x.date.localeCompare(y.date))[0], lv = DATA.tournaments.find(t => t.status === "live");
     const info = {
       schedule: ["🏓", "Групові та індивідуальні тренування", "#E8650A", "#B84A00"],
       rent: ["📅", `Стіл — ${DATA.rent[0].price} / година`, "#1B63BE", "#0F3F7E"],
@@ -591,6 +725,7 @@ const views = {
       <div class="hx-stats"><div><b>${ranked.length}</b>${pl(ranked.length, "гравець", "гравці", "гравців")}</div><div><b>${DATA.matches.length}</b>${pl(DATA.matches.length, "матч", "матчі", "матчів")}</div><div><b>${DATA.tournaments.length}</b>${pl(DATA.tournaments.length, "турнір", "турніри", "турнірів")}</div></div>
       <div class="hx-btns"><a class="hb o" href="#schedule">Розклад</a><a class="hb l" href="${DATA.club.ig}">Instagram</a><a class="hb w" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Дзвінок</a></div>
     </section>
+    ${lv ? `<a class="card accent live" href="#t-${lv.id}"><span class="tag live">● Іде зараз</span><h3 style="margin:.5rem 0 .3rem;font-size:1.15rem">${lv.name}</h3><div class="when">Результати оновлюються наживо</div><span class="go">Дивитись таблицю →</span></a>` : ""}
     ${up ? `<a class="card accent" href="#tournaments"><span class="tag up">Анонс турніру</span><h3 style="margin:.5rem 0 .3rem;font-size:1.15rem">${up.name}</h3><div class="when">${fmt(up.date)}${up.time ? " о " + up.time : ""}</div>${up.place ? `<div class="note" style="margin:.3rem 0 0">${up.place}</div>` : ""}${up.info ? `<div class="note" style="margin:.3rem 0 0">${up.info}</div>` : ""}<span class="go">Детальніше →</span></a>` : ""}
     <div class="carw"><button class="cb pv" type="button" aria-label="Назад">‹</button><button class="cb nx" type="button" aria-label="Далі">›</button><div class="car" id="car">${Object.entries(labels).filter(([id]) => id !== "home").map(([id, t], i) => { const [ic, d, c1, c2] = info[id] || ["•", "", "#1B63BE", "#0F3F7E"]; return `<a class="slide" style="--c:${c1};--c2:${c2};--i:${i}" href="#${id}"><span class="ic">${ic}</span><b>${t}</b><small>${d}</small><span class="arr">→</span></a>`; }).join("")}</div></div>
     <div class="dots" id="dots">${Object.keys(labels).filter(id => id !== "home").map(() => "<i></i>").join("")}</div>
@@ -623,18 +758,18 @@ const views = {
     <p><a class="btn" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Забронювати стіл</a></p>`,
   tournaments: () => `
     <h2>Турніри</h2><p class="sub">Результати йдуть у рейтинг гравців. Натисніть на завершений турнір, щоб побачити таблиці.</p>
-    <div class="grid">${[...DATA.tournaments].sort((x, y) => (x.status === "up" ? 0 : 1) - (y.status === "up" ? 0 : 1) || (x.status === "up" ? x.date.localeCompare(y.date) : y.date.localeCompare(x.date))).map(t => {
-      const link = t.id && t.status === "done";
-      return `<${link ? `a href="#t-${t.id}"` : "div"} class="card"><span class="tag ${t.status}">${t.status === "up" ? "Незабаром" : "Завершено"}</span>
+    <div class="grid">${[...DATA.tournaments].sort((x, y) => ({ live: 0, up: 1 }[x.status] ?? 2) - ({ live: 0, up: 1 }[y.status] ?? 2) || (x.status === "up" ? x.date.localeCompare(y.date) : y.date.localeCompare(x.date))).map(t => {
+      const link = t.id && (t.status === "done" || t.status === "live");
+      return `<${link ? `a href="#t-${t.id}"` : "div"} class="card"><span class="tag ${t.status}">${t.status === "up" ? "Незабаром" : t.status === "live" ? "● Іде зараз" : "Завершено"}</span>
       <h3 style="margin-top:.5rem">${t.name}</h3>${fmt(t.date)}${t.time ? " о " + t.time : ""}${t.place ? "<br>" + t.place : ""}
-      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p>${link ? '<span class="go">Дивитись таблиці →</span>' : ""}${t.status === "up" ? `<button class="btn" type="button" style="margin-top:.4rem;border:0;cursor:pointer;font:inherit;font-weight:700" onclick="document.getElementById('su').scrollIntoView({behavior:'smooth'})">Записатися онлайн</button> <a class="btn alt" style="margin-top:.4rem;color:var(--ink)" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Або зателефонувати</a>` : ""}</${link ? "a" : "div"}>`;
+      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p>${link ? '<span class="go">${t.status === "live" ? "Дивитись наживо →" : "Дивитись таблиці →"}</span>' : ""}${t.status === "up" ? `<button class="btn" type="button" style="margin-top:.4rem;border:0;cursor:pointer;font:inherit;font-weight:700" onclick="document.getElementById('su').scrollIntoView({behavior:'smooth'})">Записатися онлайн</button> <a class="btn alt" style="margin-top:.4rem;color:var(--ink)" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Або зателефонувати</a>` : ""}</${link ? "a" : "div"}>`;
     }).join("")}</div>${signupForm()}`,
   tournament: id => {
     const t = DATA.tournaments.find(x => x.id === id);
     if (!t) return views.tournaments();
     const ms = DATA.matches.filter(m => m.tid === id);
-    const groups = [...new Set(ms.map(m => m.t))];
-    return `<p><a href="#tournaments">← Усі турніри</a></p><h2>${t.name}</h2><p class="sub">${fmt(t.date)} · ${t.place}</p>${groups.map(g => crossTable(g, ms.filter(m => m.t === g))).join("")}<p class="note">Очки: 2 за перемогу, 1 за поразку. Місце визначається за очками, потім за різницею сетів.</p>`;
+    const groups = [...new Set([...Object.keys(t.draw || {}), ...ms.map(m => m.t)])];
+    return `<p><a href="#tournaments">← Усі турніри</a></p><h2>${t.name}</h2><p class="sub">${fmt(t.date)}${t.time ? " о " + t.time : ""} · ${t.place}</p>${t.status === "live" ? `<p><span class="tag live">● Іде зараз</span> <span class="note" id="lvst" style="margin:0 0 0 .4rem"></span></p><p class="note" style="margin-top:0">Результати оновлюються автоматично. Натисніть на гравця, щоб відкрити його профіль.</p>` : `<p class="note" style="margin-top:0">Натисніть на гравця, щоб відкрити його профіль.</p>`}${groups.map(g => crossTable(g, ms.filter(m => m.t === g), (t.draw || {})[g])).join("")}<p class="note">Очки: 2 за перемогу, 1 за поразку. Місце визначається за очками, потім за різницею сетів.</p>${roundsHtml(t, ms)}`;
   },
   stats: () => `
     <h2>Очна статистика</h2><p class="sub">Оберіть двох гравців — побачите, хто частіше вигравав.</p>
@@ -645,8 +780,13 @@ const views = {
   rating: () => {
     const hi = ranked[0].r, lo = Math.min(...ranked.map(p => p.r));
     return `
-    <h2>Рейтинг клубу</h2><p class="sub">Система Elo: усі починають із ${START}. Перемога над сильнішим суперником дає більше очок.</p>
-    <div class="list">${ranked.map((p, i) => `<a class="rk" href="#p-${p.id}"><span class="pos p${i < 3 ? i + 1 : 0}">${i + 1}</span>${av(p, "s")}<div class="who2"><b>${p.name}</b><div class="meter"><i style="--w:${Math.max(6, Math.round(100 * (p.r - lo + 15) / (hi - lo + 15)))}%;--i:${i}"></i></div><small>${p.w + p.l} ігор, перемог ${p.w}, поразок ${p.l}</small></div><b class="pts">${Math.round(p.r)}</b></a>`).join("")}</div>`;
+    <h2>Рейтинг клубу</h2><p class="sub">Система Elo: усі починають із ${START}. Перемога над сильнішим суперником дає більше очок. Вага (В) показує активність: росте від турнірів і знижується 1-го числа кожного місяця.</p>
+    <div class="list">${ranked.map((p, i) => `<a class="rk" href="#p-${p.id}"><span class="pos p${i < 3 ? i + 1 : 0}">${i + 1}</span>${av(p, "s")}<div class="who2"><b>${p.name}</b><div class="meter"><i style="--w:${Math.max(6, Math.round(100 * (p.r - lo + 15) / (hi - lo + 15)))}%;--i:${i}"></i></div><small>${p.w + p.l} ігор, перемог ${p.w}, поразок ${p.l} · вага ${Math.round(p.b)}</small></div><b class="pts">${Math.round(p.r)}</b></a>`).join("")}</div>
+    <details class="how"><summary>Вклад і вага</summary>
+      <p><b>Рейтинг</b> рахується після кожного матчу за системою Elo (старт ${START}).</p>
+      <p><b>Вклад зустрічі</b> — за українськими правилами: переміг сильніший (або рівний) — 2, 1 або 0 залежно від різниці в силі; переміг слабший — більше (різниця + 5) / 3. Вклади рахуються за окремою українською шкалою, яка стартує з ${UR.R0} у першому турнірі клубу.</p>
+      <p><b>Вага</b> гравця зростає після кожного турніру на суму вкладів (не більше ${UR.VCAP}). 1-го числа кожного місяця вага знижується: на (В/15)², якщо вона більша за 14, або на 1, якщо менша. Хто довго не грає, той втрачає вагу.</p>
+    </details>`;
   },
   players: () => `
     <h2>Гравці клубу</h2><p class="sub">Натисніть на гравця, щоб відкрити його картку.</p>
@@ -661,11 +801,11 @@ const views = {
       const grp = mine[0].t, [pl, n] = placeIn(DATA.matches.filter(m => m.tid === t.id && m.t === grp), id);
       return `<div class="mr"><span>${t.name}<br><small>${grp}</small></span><span class="pill ${pl === 1 ? "w" : ""}">${pl === 1 ? "🥇 " : ""}${pl} місце з ${n}</span></div>`;
     }).join("");
-    const last = [...p.h].reverse().slice(0, 10).map(h => `<div class="mr"><span>${P[h.o].name}<br><small>${sd(h.d)} · ${h.dr >= 0 ? "+" : "−"}${Math.abs(Math.round(h.dr))} очок</small></span><span class="pill ${h.win ? "w" : "l"}">${h.f}:${h.g} ${h.win ? "Перемога" : "Поразка"}</span></div>`).join("");
+    const last = [...p.h].reverse().slice(0, 10).map(h => `<div class="mr"><span>${P[h.o].name}<br><small>${sd(h.d)} · ${h.dr >= 0 ? "+" : "−"}${Math.abs(Math.round(h.dr))} очок · вклад ${h.vk > 0 ? "+" : h.vk < 0 ? "−" : ""}${n1(Math.abs(h.vk))}</small></span><span class="pill ${h.win ? "w" : "l"}">${h.f}:${h.g} ${h.win ? "Перемога" : "Поразка"}</span></div>`).join("");
     const det = [p.hand ? ["Рука", p.hand + (p.grip ? ", " + p.grip : "")] : null, p.since ? ["У клубі з", p.since] : null, p.age ? ["Вік", p.age] : null].filter(Boolean).map(x => `<div class="mr"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
     return `<p><a href="#players">← Усі гравці</a></p>
     <div class="pcard">
-      <div class="ph">${av(p, "sq")}<div class="pi"><span class="lg ${p.group === O ? "o" : "b"}">${p.group || "Гравець"}</span><h2>${p.name}</h2><div class="ps">Гравець TennisTeam${p.born ? " · " + p.born + " р.н." : ""}</div><div class="pn">№ ${String(i + 1).padStart(2, "0")}</div><div class="ps">Місце в рейтингу · <b>${Math.round(p.r)}</b></div></div></div>
+      <div class="ph">${av(p, "sq")}<div class="pi"><span class="lg ${p.group === O ? "o" : "b"}">${p.group || "Гравець"}</span><h2>${p.name}</h2><div class="ps">Гравець TennisTeam${p.born ? " · " + p.born + " р.н." : ""}</div><div class="pn">№ ${String(i + 1).padStart(2, "0")}</div><div class="ps">Місце в рейтингу · <b>${Math.round(p.r)}</b> · вага <b>${Math.round(p.b)}</b></div></div></div>
       <div class="pt"><div><b>${g}</b><span>Матчів</span></div><div><b>${p.w}</b><span>Перемог</span></div><div><b>${p.l}</b><span>Поразок</span></div><div><b>${pct(p.w, g)}</b><span>Перемог, %</span></div></div>
       <h3>Динаміка рейтингу</h3>${ratingChart(p)}
       ${tl ? `<h3>Турніри</h3>${tl}` : ""}
@@ -675,6 +815,111 @@ const views = {
     </div>`;
   }
 };
+
+/* ====== КЕРУВАННЯ ТУРНІРОМ (#admin) ====== */
+const ADM = { key: localStorage.getItem("ttkey") || "", draft: null, gi: 0, open: null, msg: "", tab: 0 };
+const admLive = () => LIVE.items.find(i => i.status === "live") || null;
+const admAll = () => DATA.players.slice().sort((a, b) => a.name.localeCompare(b.name, "uk"));
+function admNewDraft() { return { announce: "", name: "", date: new Date().toISOString().slice(0, 10), time: "12:00", groups: [{ name: O, to: 3, draw: [] }], players: [] }; }
+function admHtml() {
+  if (!DATA.live.endpoint) return `<p class="sub">Сервер для турніру наживо ще не підключено. Додайте адресу скрипта в налаштуваннях сайту (рядок <b>live: { endpoint: "…" }</b>).</p>`;
+  const keyBox = `<div class="adm-k"><label>Ключ доступу<input type="password" id="adk" value="${esc(ADM.key)}" autocomplete="off"></label><button class="btn" data-act="key" type="button">Запам’ятати ключ</button></div>`;
+  const msg = ADM.msg ? `<p class="adm-msg" role="status">${esc(ADM.msg)}</p>` : "";
+  const lv = admLive();
+  if (lv) return keyBox + msg + admControl(lv);
+  if (!ADM.draft) ADM.draft = admNewDraft();
+  return keyBox + msg + admStart() + admDone();
+}
+function admDone() {
+  const d = LIVE.items.filter(i => i.status === "done");
+  return d.length ? `<h3 style="margin-top:1.6rem">Внесені наживо</h3>${d.map(i => `<div class="rr"><span>${esc(i.name)} · ${sd(i.date)}</span><span><button class="chip" data-act="reopen" data-id="${i.id}" type="button">Відкрити</button> <button class="chip" data-act="del" data-id="${i.id}" type="button">Видалити</button></span></div>`).join("")}` : "";
+}
+function admStart() {
+  const d = ADM.draft, ups = BASE.tournaments.filter(t => t.status === "up"), g = d.groups[ADM.gi] || d.groups[0], all = admAll().concat(d.players);
+  return `<h3 style="margin-top:1.2rem">Почати турнір</h3>
+  <label>Анонсований турнір<select id="ad-ann"><option value="">— інший —</option>${ups.map(t => `<option value="${t.id}" ${d.announce === t.id ? "selected" : ""}>${esc(t.name)} · ${sd(t.date)}</option>`).join("")}</select></label>
+  <label>Назва<input id="ad-name" value="${esc(d.name)}" placeholder="TT Open #3"></label>
+  <div class="adm-row"><label>Дата<input id="ad-date" type="date" value="${d.date}"></label><label>Час<input id="ad-time" type="time" value="${d.time}"></label></div>
+  <div class="adm-tabs">${d.groups.map((x, i) => `<button class="chip ${i === ADM.gi ? "on" : ""}" data-act="gtab" data-i="${i}" type="button">${esc(x.name)} (${x.draw.length})</button>`).join("")}<button class="chip" data-act="gadd" type="button">+ ліга</button></div>
+  <div class="adm-row"><label>Назва ліги<input id="ad-gname" value="${esc(g.name)}" list="ad-gl"><datalist id="ad-gl"><option value="${O}"><option value="${B}"></datalist></label><label>Гра до<select id="ad-to"><option value="3" ${g.to === 3 ? "selected" : ""}>3 перемог</option><option value="4" ${g.to === 4 ? "selected" : ""}>4 перемог</option></select></label></div>
+  <p class="note" style="margin:.4rem 0">Торкайтеся гравців <b>у порядку номерів жеребкування</b>: 1-й, 2-й, 3-й… Повторне торкання прибирає гравця.</p>
+  <div class="adm-chips">${all.map(p => { const n = g.draw.indexOf(p.id) + 1; return `<button class="chip ${n ? "on" : ""}" data-act="pick" data-id="${p.id}" type="button">${n ? `<i>${n}</i>` : ""}${esc(p.name)}</button>`; }).join("")}</div>
+  <div class="adm-row"><label>Новий гравець<input id="ad-nn" placeholder="Прізвище Ім’я"></label><label>Рік народж.<input id="ad-ny" inputmode="numeric" placeholder="2010"></label></div>
+  <button class="chip" data-act="newp" type="button">+ Додати гравця</button>
+  <p style="margin-top:1.2rem"><button class="btn" data-act="start" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700">Почати турнір</button></p>`;
+}
+function admControl(it) {
+  const g = it.groups[ADM.tab] || it.groups[0], dr = g.draw, n = dr.length, N = n % 2 ? n + 1 : n, res = g.res || {}, to = g.to || 3;
+  const nm = i => (P[dr[i - 1]] ? P[dr[i - 1]].name : "?");
+  const rounds = [];
+  for (let r = 1; r < N; r++) { const pairs = []; for (let i = 1; i <= n; i++) for (let j = i + 1; j <= n; j++) if (rrRound(n, i, j) === r) pairs.push([i, j]); rounds.push(pairs); }
+  const cur = rounds.findIndex(p => p.some(([i, j]) => !res[i + "-" + j]));
+  const chips = k => { const a = []; for (let x = 0; x < to; x++) a.push(to + ":" + x); for (let x = to - 1; x >= 0; x--) a.push(x + ":" + to); return a.map(v => `<button class="chip" data-act="score" data-k="${k}" data-v="${v}" type="button">${v}</button>`).join("") + `<button class="chip" data-act="score" data-k="${k}" data-v="" type="button">Очистити</button>`; };
+  return `<h3 style="margin-top:1.2rem">${esc(it.name)} <span class="tag live">● Іде зараз</span></h3>
+  <p class="note" style="margin-top:0">Внесіть результат — він одразу з’явиться на сайті (оновлення у глядачів до ~20 с).</p>
+  <div class="adm-tabs">${it.groups.map((x, i) => `<button class="chip ${i === ADM.tab ? "on" : ""}" data-act="ctab" data-i="${i}" type="button">${esc(x.name)}</button>`).join("")}</div>
+  ${rounds.map((pairs, k) => `<details class="rd" ${k === cur ? "open" : ""}><summary>Тур ${k + 1} · ${pairs.filter(([i, j]) => res[i + "-" + j]).length} з ${pairs.length}${k === cur ? " · зараз" : ""}</summary>${pairs.map(([i, j]) => { const key = i + "-" + j, v = res[key]; return `<div class="rr adm-m" data-act="open" data-k="${key}"><span>${i}. ${esc(nm(i))} — ${j}. ${esc(nm(j))}</span><b class="rsc ${v ? (+v.split(":")[0] > +v.split(":")[1] ? "w" : "l") : ""}">${v || "внести"}</b></div>${ADM.open === g.name + "|" + key ? `<div class="adm-chips">${chips(key)}</div>` : ""}`; }).join("")}</details>`).join("")}
+  <p style="margin-top:1.4rem"><button class="btn" data-act="finish" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700">Завершити турнір</button> <button class="chip" data-act="del" data-id="${it.id}" type="button">Видалити турнір</button></p>`;
+}
+function admRender() { const b = document.getElementById("adm"); if (b) b.innerHTML = admHtml(); }
+function admInit() {
+  const b = document.getElementById("adm"); if (!b) return;
+  b.innerHTML = admHtml();
+  b.addEventListener("input", e => {
+    const d = ADM.draft, t = e.target; if (!d) return;
+    if (t.id === "ad-name") d.name = t.value; else if (t.id === "ad-date") d.date = t.value; else if (t.id === "ad-time") d.time = t.value;
+    else if (t.id === "ad-gname") { d.groups[ADM.gi].name = t.value; }
+    else if (t.id === "ad-to") d.groups[ADM.gi].to = +t.value;
+    else if (t.id === "ad-ann") { d.announce = t.value; const a = BASE.tournaments.find(x => x.id === t.value); if (a) { d.name = a.name; d.date = a.date; d.time = a.time || d.time; } admRender(); }
+  });
+  b.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (el) admAct(el); });
+}
+function admClone(o) { return JSON.parse(JSON.stringify(o)); }
+async function admSave(item, draft) {
+  item.u = Date.now(); ADM.msg = "Збереження…";
+  const prev = LIVE.items, undo = msg => { LIVE.items = prev; LIVE.key = ""; applyLive(); if (draft) ADM.draft = draft; ADM.msg = msg; admRender(); route(true); return false; };
+  LIVE.items = [...LIVE.items.filter(i => i.id !== item.id), item]; LIVE.key = ""; applyLive(); admRender();
+  let ok = false;
+  try {
+    const r = await fetch(DATA.live.endpoint, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key: ADM.key, action: "save", item }) });
+    try { const d = await r.json(); if (d && d.error === "key") return undo("Невірний ключ доступу — зміни НЕ збережено."); ok = !!(d && d.ok); } catch (x) { }
+  } catch (x) { }
+  if (!ok) { await new Promise(r => setTimeout(r, 1200)); try { const r = await fetch(DATA.live.endpoint + "?t=" + Date.now(), { cache: "no-store" }); const d = await r.json(); ok = !!(d && d.items && d.items.some(i => i.id === item.id && i.u === item.u)); } catch (x) { } }
+  if (!ok) return undo("Не вдалося підтвердити збереження: перевірте ключ і з’єднання, зміни відкотилися.");
+  ADM.msg = "Збережено ✓"; admRender(); route(true); return true;
+}
+async function admDelete(id) {
+  ADM.msg = "Видалення…";
+  try { await fetch(DATA.live.endpoint, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key: ADM.key, action: "delete", id }) }); } catch (x) { }
+  LIVE.items = LIVE.items.filter(i => i.id !== id); LIVE.key = ""; applyLive(); ADM.msg = "Видалено."; admRender(); route(true);
+}
+function admAct(el) {
+  const a = el.dataset.act, d = ADM.draft, lv = admLive();
+  if (a === "key") { ADM.key = document.getElementById("adk").value.trim(); localStorage.setItem("ttkey", ADM.key); ADM.msg = "Ключ збережено на цьому пристрої."; }
+  else if (a === "gtab") ADM.gi = +el.dataset.i;
+  else if (a === "gadd") { d.groups.push({ name: B, to: 3, draw: [] }); ADM.gi = d.groups.length - 1; }
+  else if (a === "pick") { const g = d.groups[ADM.gi], id = el.dataset.id, k = g.draw.indexOf(id); if (k >= 0) g.draw.splice(k, 1); else g.draw.push(id); }
+  else if (a === "newp") {
+    const n = document.getElementById("ad-nn").value.trim(), y = +document.getElementById("ad-ny").value || undefined;
+    if (n.length < 3) { ADM.msg = "Вкажіть прізвище та ім’я нового гравця."; } else { const id = "x" + Date.now().toString(36); d.players.push({ id, name: n, born: y }); d.groups[ADM.gi].draw.push(id); ADM.msg = ""; }
+  }
+  else if (a === "start") {
+    const bad = d.groups.find(g => g.draw.length < 3);
+    if (!d.name.trim()) ADM.msg = "Вкажіть назву турніру."; else if (bad) ADM.msg = "У лізі «" + bad.name + "» має бути щонайменше 3 учасники."; else if (new Set(d.groups.map(g => g.name)).size < d.groups.length) ADM.msg = "Назви ліг мають відрізнятися.";
+    else {
+      const used = new Set(d.groups.flatMap(g => g.draw)), item = { id: "L" + d.date.replace(/-/g, "") + (LIVE.items.length ? "-" + LIVE.items.length : ""), name: d.name.trim(), date: d.date, time: d.time, announce: d.announce, status: "live", players: d.players.filter(p => used.has(p.id)), groups: d.groups.map(g => ({ name: g.name.trim(), to: g.to, draw: g.draw, res: {} })) };
+      ADM.draft = null; ADM.tab = 0; admSave(item, d); return;
+    }
+  }
+  else if (a === "ctab") ADM.tab = +el.dataset.i;
+  else if (a === "open") { const g = lv.groups[ADM.tab], k = g.name + "|" + el.dataset.k; ADM.open = ADM.open === k ? null : k; }
+  else if (a === "score") { const it = admClone(lv), g = it.groups[ADM.tab]; g.res = g.res || {}; if (el.dataset.v) g.res[el.dataset.k] = el.dataset.v; else delete g.res[el.dataset.k]; ADM.open = null; admSave(it); return; }
+  else if (a === "finish") { if (confirm("Завершити турнір? Результати залишаться на сайті, рейтинг уже враховано.")) { const it = admClone(lv); it.status = "done"; admSave(it); } return; }
+  else if (a === "reopen") { const it = admClone(LIVE.items.find(i => i.id === el.dataset.id)); it.status = "live"; ADM.tab = 0; admSave(it); return; }
+  else if (a === "del") { if (confirm("Видалити турнір повністю? Це не можна скасувати.")) admDelete(el.dataset.id); return; }
+  admRender();
+}
+views.admin = () => `<h2>Керування турніром</h2><div id="adm"></div>`;
 const labels = { home: "Головна", schedule: "Тренування", rent: "Оренда столів", tournaments: "Турніри", rating: "Рейтинг", players: "Гравці", stats: "Статистика" };
 function initCarousel() {
   const c = document.getElementById("car"), d = [...document.querySelectorAll("#dots i")];
@@ -708,7 +953,7 @@ function buildDrawer() {
   drawer.innerHTML = `<div class="dr-top"><div class="hx-logo"><i></i>TennisTeam</div><button class="dr-x" type="button" aria-label="Закрити меню">×</button></div>
     <nav>${Object.entries(labels).map(([id, t]) => `<a href="#${id}" data-id="${id}"><span class="di" aria-hidden="true">${ICON[id] || "•"}</span>${t}</a>`).join("")}</nav>
     <div class="dr-sep"></div>
-    <nav>${up ? `<a href="#tournaments" data-su="1"><span class="di" aria-hidden="true">✍️</span>Записатися на ${up.name}</a>` : ""}<a href="tel:${DATA.club.phone.replace(/\s/g, "")}"><span class="di" aria-hidden="true">📞</span>Зателефонувати</a><a href="${DATA.club.ig}"><span class="di" aria-hidden="true">📷</span>Instagram</a></nav>`;
+    <nav>${DATA.tournaments.find(t => t.status === "live") ? `<a href="#t-${DATA.tournaments.find(t => t.status === "live").id}"><span class="di" aria-hidden="true">🔴</span>Турнір наживо</a>` : ""}${up ? `<a href="#tournaments" data-su="1"><span class="di" aria-hidden="true">✍️</span>Записатися на ${up.name}</a>` : ""}<a href="tel:${DATA.club.phone.replace(/\s/g, "")}"><span class="di" aria-hidden="true">📞</span>Зателефонувати</a><a href="${DATA.club.ig}"><span class="di" aria-hidden="true">📷</span>Instagram</a></nav>`;
 }
 function markActive() {
   const h = (location.hash || "#home").slice(1), id = /^t-/.test(h) ? "tournaments" : /^p-/.test(h) ? "players" : labels[h] ? h : "home";
@@ -737,21 +982,27 @@ drawer.addEventListener("click", e => {
   closeDrawer();
   if (a.dataset.su) setTimeout(() => { const el = document.getElementById("su"); if (el) el.scrollIntoView({ behavior: "smooth" }); }, 200);
 });
-function route() {
-  const h = (location.hash || "#home").slice(1);
+function route(fresh) {
+  const h = (location.hash || "#home").slice(1), re = fresh === true;
   const tm = h.match(/^t-(.+)$/), pm = h.match(/^p-(.+)$/);
   const k = tm ? "tournaments" : pm ? "players" : (h !== "home" && h !== "tournament" && h !== "player" && views[h] ? h : "");
-  const app = document.getElementById("app");
-  if (!app.dataset.ok) { app.innerHTML = views.home(); app.dataset.ok = "1"; initCarousel();
+  const app = document.getElementById("app"), m = document.getElementById("modal"), sc = document.getElementById("sc");
+  if (!app.dataset.ok || re) { app.innerHTML = views.home(); app.dataset.ok = "1"; initCarousel();
     if (matchMedia("(prefers-reduced-motion:reduce)").matches) app.querySelectorAll(".hx animateMotion").forEach(a => { const c = a.parentNode; a.remove(); c.setAttribute("cx", 268); c.setAttribute("cy", 46); });
   }
-  const m = document.getElementById("modal");
+  if (re) buildDrawer();
+  const typing = re && m.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   if (k) {
-    document.getElementById("mb").innerHTML = tm ? views.tournament(tm[1]) : pm ? views.player(pm[1]) : views[k]();
-    bindChart(document.getElementById("mb"));
+    if (!(re && (k === "admin" || typing))) {
+      const y = sc.scrollTop;
+      document.getElementById("mb").innerHTML = tm ? views.tournament(tm[1]) : pm ? views.player(pm[1]) : views[k]();
+      bindChart(document.getElementById("mb"));
+      if (k === "admin") admInit();
+      sc.scrollTop = re ? y : 0;
+      stamp();
+    }
     m.hidden = false; document.body.style.overflow = "hidden";
-    document.getElementById("sc").scrollTop = 0;
-    document.getElementById("mx").focus({ preventScroll: true });
+    if (!re) document.getElementById("mx").focus({ preventScroll: true });
   } else { m.hidden = true; document.body.style.overflow = ""; }
   markActive();
 }
@@ -760,6 +1011,7 @@ document.getElementById("mx").addEventListener("click", closeM);
 document.getElementById("modal").addEventListener("click", e => { if (e.target.id === "modal") closeM(); });
 addEventListener("keydown", e => { if (e.key === "Escape") { if (drawer.classList.contains("open")) closeDrawer(); else closeM(); } });
 buildDrawer(); addEventListener("hashchange", route); route();
+if (DATA.live.endpoint) pollLoop();
 </script>
 </body>
 </html>
