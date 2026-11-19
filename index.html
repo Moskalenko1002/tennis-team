@@ -290,7 +290,7 @@ const DATA = {
   /* Запис на турнір: endpoint — адреса скрипта, що пересилає заявку в Telegram (див. інструкцію); viber — номер для чату; tg — username без @ (або порожньо) */
   signup: { endpoint: "", viber: "+380 99 193 41 23", tg: "" },
   /* Турнір наживо: endpoint — адреса Google Apps Script (див. інструкцію). Порожньо — функція вимкнена. */
-  live: { endpoint: "" },
+  live: { endpoint: "https://script.google.com/macros/s/AKfycbxb0TVpFtCrtovB_9xZggydBcycwJ84BMIos5e-19vuW8xq8UHfzVSO7gjrBpCKj3KO/exec" },
   schedule: [
     { title: "Групові тренування", days: ["Понеділок", "Середа", "П’ятниця"], time: "17:30–19:00", coach: "Москаленко Єгор Олександрович" },
     { title: "Індивідуальні тренування", days: ["Усі інші дні"], time: "За домовленістю", note: "Також тренування для 2 або 4 осіб", coach: "Москаленко Єгор Олександрович" },
@@ -757,12 +757,12 @@ const views = {
     <div class="list">${DATA.rent.map(r => `<div class="row"><span>${r.name}</span><b>${r.price}</b></div>`).join("")}</div>
     <p><a class="btn" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Забронювати стіл</a></p>`,
   tournaments: () => `
-    <h2>Турніри</h2><p class="sub">Результати йдуть у рейтинг гравців. Натисніть на завершений турнір, щоб побачити таблиці.</p>
+    <h2>Турніри</h2><p class="sub">Результати йдуть у рейтинг гравців. Натисніть на завершений турнір, щоб побачити результати.</p>
     <div class="grid">${[...DATA.tournaments].sort((x, y) => ({ live: 0, up: 1 }[x.status] ?? 2) - ({ live: 0, up: 1 }[y.status] ?? 2) || (x.status === "up" ? x.date.localeCompare(y.date) : y.date.localeCompare(x.date))).map(t => {
       const link = t.id && (t.status === "done" || t.status === "live");
       return `<${link ? `a href="#t-${t.id}"` : "div"} class="card"><span class="tag ${t.status}">${t.status === "up" ? "Незабаром" : t.status === "live" ? "● Іде зараз" : "Завершено"}</span>
       <h3 style="margin-top:.5rem">${t.name}</h3>${fmt(t.date)}${t.time ? " о " + t.time : ""}${t.place ? "<br>" + t.place : ""}
-      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p>${link ? '<span class="go">${t.status === "live" ? "Дивитись наживо →" : "Дивитись таблиці →"}</span>' : ""}${t.status === "up" ? `<button class="btn" type="button" style="margin-top:.4rem;border:0;cursor:pointer;font:inherit;font-weight:700" onclick="document.getElementById('su').scrollIntoView({behavior:'smooth'})">Записатися онлайн</button> <a class="btn alt" style="margin-top:.4rem;color:var(--ink)" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Або зателефонувати</a>` : ""}</${link ? "a" : "div"}>`;
+      <p class="note">${t.winners ? t.winners.map(w => w.g + ": <b>" + P[w.id].name + "</b>").join("<br>") : (t.info || "")}</p>${link ? `<span class="go">${t.status === "live" ? "Дивитись наживо →" : "Результати →"}</span>` : ""}${t.status === "up" ? `<button class="btn" type="button" style="margin-top:.4rem;border:0;cursor:pointer;font:inherit;font-weight:700" onclick="document.getElementById('su').scrollIntoView({behavior:'smooth'})">Записатися онлайн</button> <a class="btn alt" style="margin-top:.4rem;color:var(--ink)" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Або зателефонувати</a>` : ""}</${link ? "a" : "div"}>`;
     }).join("")}</div>${signupForm()}`,
   tournament: id => {
     const t = DATA.tournaments.find(x => x.id === id);
