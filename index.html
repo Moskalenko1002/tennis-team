@@ -598,18 +598,22 @@ function applyLive() {
   compute();
 }
 function stamp() { const e = document.getElementById("lvst"); if (e && LIVE.at) e.textContent = "Оновлено " + LIVE.at.toLocaleTimeString("uk-UA"); }
+const SYNC = { pending: {}, busy: false, err: "", fatal: false, ok: false };
 async function fetchLive(force) {
   if (!DATA.live.endpoint) return false;
   try {
     const r = await fetch(DATA.live.endpoint + (DATA.live.endpoint.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
     const d = await r.json();
     if (!d || !d.ok) return false;
-    const key = JSON.stringify(d.items.map(i => [i.id, i.u, i.status]));
+    /* локальні, ще не збережені зміни адміністратора мають пріоритет над відповіддю сервера */
+    const merged = d.items.map(si => (SYNC.pending[si.id] && SYNC.pending[si.id] > si.u && LIVE.items.find(x => x.id === si.id)) || si);
+    Object.keys(SYNC.pending).forEach(id => { if (!merged.some(x => x.id === id)) { const li = LIVE.items.find(x => x.id === id); if (li) merged.push(li); } });
+    const key = JSON.stringify(merged.map(i => [i.id, i.u, i.status]));
     LIVE.at = new Date();
-    const missing = LIVE.items.some(i => !d.items.some(x => x.id === i.id));
+    const missing = LIVE.items.some(i => !merged.some(x => x.id === i.id));
     if (!force && missing && (LIVE.miss = (LIVE.miss || 0) + 1) < 2) { stamp(); return true; }
     LIVE.miss = 0;
-    if (force || key !== LIVE.key) { LIVE.items = d.items; LIVE.key = key; applyLive(); route(true); }
+    if (force || key !== LIVE.key) { LIVE.items = merged; LIVE.key = key; applyLive(); route(true); }
     stamp();
     return true;
   } catch (e) { return false; }
@@ -883,8 +887,9 @@ const resFor = (g, A, B) => { const i = g.draw.indexOf(A) + 1, j = g.draw.indexO
 function admNewDraft() { return { announce: "", name: "", date: new Date().toISOString().slice(0, 10), time: "12:00", groups: [{ name: O, to: 3, draw: [] }], players: [] }; }
 function admHtml() {
   if (!DATA.live.endpoint) return `<p class="sub">Сервер для турніру наживо ще не підключено. Додайте адресу скрипта в налаштуваннях сайту (рядок <b>live: { endpoint: "…" }</b>).</p>`;
-  const keyBox = `<div class="adm-k"><label>Ключ доступу<input type="password" id="adk" value="${esc(ADM.key)}" autocomplete="off"></label><button class="btn" data-act="key" type="button">Запам’ятати ключ</button></div>`;
-  const msg = ADM.msg ? `<p class="adm-msg" role="status">${esc(ADM.msg)}</p>` : "";
+  const keyBox = `<div class="adm-k"><label>Ключ доступу<input type="password" id="adk" value="${esc(ADM.key)}" autocomplete="off"></label><button class="btn" data-act="key" type="button">Запам’ятати ключ</button> <button class="chip" data-act="ping" type="button">Перевірити сервер</button></div>`;
+  const pend = Object.keys(SYNC.pending).length, sync = SYNC.err ? `<p class="adm-msg" style="border-color:#D64545" role="alert">⚠ Не збережено на сервері: ${esc(SYNC.err)}. ${SYNC.fatal ? "Перевірте ключ угорі й натисніть «Повторити»." : "Повторюю автоматично."} <button class="chip" data-act="retry" type="button">Повторити</button></p>` : pend ? `<p class="adm-msg" role="status">Збереження…</p>` : SYNC.ok ? `<p class="adm-msg" role="status">Збережено ✓</p>` : "";
+  const msg = sync + (ADM.msg ? `<p class="adm-msg" role="status">${esc(ADM.msg)}</p>` : "") + (ADM.diag ? `<pre class="su-msg">${esc(ADM.diag)}</pre>` : "");
   const lv = admLive();
   if (lv) return keyBox + msg + admControl(lv);
   if (!ADM.draft) ADM.draft = admNewDraft();
@@ -984,23 +989,59 @@ function admInit() {
   });
   b.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (el) admAct(el); });
 }
-async function admSave(item, draft) {
-  item.u = Date.now(); ADM.msg = "Збереження…";
-  const prev = LIVE.items, undo = msg => { LIVE.items = prev; LIVE.key = ""; applyLive(); if (draft) ADM.draft = draft; ADM.msg = msg; admRender(); route(true); return false; };
-  LIVE.items = [...LIVE.items.filter(i => i.id !== item.id), item]; LIVE.key = ""; applyLive(); admRender();
-  let ok = false;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function postItem(item) {
+  let txt = "";
   try {
     const r = await fetch(DATA.live.endpoint, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key: ADM.key, action: "save", item }) });
-    try { const d = await r.json(); if (d && d.error === "key") return undo("Невірний ключ доступу — зміни НЕ збережено."); ok = !!(d && d.ok); } catch (x) { }
+    txt = await r.text();
+    try {
+      const d = JSON.parse(txt);
+      if (d.ok) return { ok: true };
+      if (d.error === "key") return { ok: false, fatal: true, err: "невірний ключ доступу" };
+      return { ok: false, err: "сервер повернув помилку: " + (d.error || "невідома") };
+    } catch (x) { /* відповідь не JSON — перевіримо читанням */ }
+  } catch (x) { /* мережа або CORS — перевіримо читанням */ }
+  await sleep(1500);
+  try {
+    const r = await fetch(DATA.live.endpoint + "?t=" + Date.now(), { cache: "no-store" }), d = await r.json();
+    if (d && d.items && d.items.some(i => i.id === item.id && i.u === item.u)) return { ok: true };
   } catch (x) { }
-  if (!ok) { await new Promise(r => setTimeout(r, 1200)); try { const r = await fetch(DATA.live.endpoint + "?t=" + Date.now(), { cache: "no-store" }); const d = await r.json(); ok = !!(d && d.items && d.items.some(i => i.id === item.id && i.u === item.u)); } catch (x) { } }
-  if (!ok) return undo("Не вдалося підтвердити збереження: перевірте ключ і з’єднання, зміни відкотилися.");
-  ADM.msg = "Збережено ✓"; admRender(); route(true); return true;
+  return { ok: false, err: txt ? "сервер відповів не так, як очікувалось («" + txt.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 90) + "»). Скрипт оновлено й розгорнуто як «Нова версія»?" : "немає зв’язку із сервером" };
+}
+async function flush() {
+  if (SYNC.busy) return;
+  SYNC.busy = true; SYNC.err = ""; SYNC.fatal = false; admRender();
+  try {
+    for (;;) {
+      const id = Object.keys(SYNC.pending)[0];
+      if (!id) break;
+      const item = LIVE.items.find(i => i.id === id);
+      if (!item) { delete SYNC.pending[id]; continue; }
+      const sent = item.u, r = await postItem(item);
+      if (r.ok) { if (SYNC.pending[id] === sent) delete SYNC.pending[id]; SYNC.ok = true; }
+      else { SYNC.err = r.err; SYNC.fatal = !!r.fatal; break; }
+    }
+  } finally { SYNC.busy = false; }
+  admRender();
+  if (SYNC.err && !SYNC.fatal) setTimeout(() => { if (Object.keys(SYNC.pending).length && !SYNC.busy) flush(); }, 6000);
+}
+function admSave(item) {
+  item.u = Date.now();
+  LIVE.items = [...LIVE.items.filter(i => i.id !== item.id), item]; LIVE.key = ""; SYNC.pending[item.id] = item.u;
+  ADM.msg = ""; applyLive(); admRender(); route(true); flush();
 }
 async function admDelete(id) {
-  ADM.msg = "Видалення…";
-  try { await fetch(DATA.live.endpoint, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key: ADM.key, action: "delete", id }) }); } catch (x) { }
-  LIVE.items = LIVE.items.filter(i => i.id !== id); LIVE.key = ""; applyLive(); ADM.msg = "Видалено."; admRender(); route(true);
+  delete SYNC.pending[id]; LIVE.items = LIVE.items.filter(i => i.id !== id); LIVE.key = ""; applyLive(); ADM.msg = "Видалення…"; admRender(); route(true);
+  let ok = false;
+  try { const r = await fetch(DATA.live.endpoint, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key: ADM.key, action: "delete", id }) }); const d = JSON.parse(await r.text()); ok = !!d.ok; if (d.error === "key") { ADM.msg = "Невірний ключ — турнір НЕ видалено на сервері."; admRender(); return; } } catch (x) { }
+  ADM.msg = ok ? "Видалено." : "Не вдалося підтвердити видалення на сервері — перевірте з’єднання."; admRender();
+}
+async function admPing() {
+  const ep = DATA.live.endpoint, out = [];
+  try { const r = await fetch(ep + "?t=" + Date.now(), { cache: "no-store" }), t = await r.text(); try { const d = JSON.parse(t); out.push("Читання: OK, турнірів на сервері: " + d.items.length); } catch (x) { out.push("Читання: відповідь не JSON — " + t.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 120)); } } catch (x) { out.push("Читання: немає зв’язку (" + x.message + ")"); }
+  try { const r = await fetch(ep, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key: ADM.key, action: "ping" }) }), t = await r.text(); try { const d = JSON.parse(t); out.push(d.ok ? "Запис: OK, ключ вірний" : d.error === "key" ? "Запис: НЕВІРНИЙ КЛЮЧ" : "Запис: помилка " + (d.error || "")); } catch (x) { out.push("Запис: відповідь не JSON — " + t.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 120)); } } catch (x) { out.push("Запис: немає зв’язку (" + x.message + ")"); }
+  ADM.diag = out.join("\n"); admRender();
 }
 function admS2Make(it) {
   const o = ADM.s2, s1 = it.groups.filter(g => !g.stage);
@@ -1037,7 +1078,9 @@ function admS2Make(it) {
 function admAct(el) {
   const a = el.dataset.act, d = ADM.draft, lv = admLive(), k = el.dataset.k;
   const tg = it => el.dataset.br ? it.br : it.groups[ADM.tab];
-  if (a === "key") { ADM.key = document.getElementById("adk").value.trim(); localStorage.setItem("ttkey", ADM.key); ADM.msg = "Ключ збережено на цьому пристрої."; }
+  if (a === "key") { ADM.key = document.getElementById("adk").value.trim(); localStorage.setItem("ttkey", ADM.key); ADM.msg = "Ключ збережено на цьому пристрої."; if (Object.keys(SYNC.pending).length) { SYNC.err = ""; flush(); } }
+  else if (a === "ping") { ADM.diag = "Перевірка…"; admRender(); admPing(); return; }
+  else if (a === "retry") { SYNC.err = ""; flush(); return; }
   else if (a === "gtab") ADM.gi = +el.dataset.i;
   else if (a === "gadd") { d.groups.push({ name: "Група " + "АБВГДЕ"[d.groups.length] || B, to: 3, draw: [] }); ADM.gi = d.groups.length - 1; }
   else if (a === "gdel") { d.groups.splice(ADM.gi, 1); ADM.gi = 0; }
@@ -1051,7 +1094,7 @@ function admAct(el) {
     if (!d.name.trim()) ADM.msg = "Вкажіть назву турніру."; else if (bad) ADM.msg = "У групі «" + bad.name + "» має бути щонайменше 3 учасники."; else if (new Set(d.groups.map(g => g.name.trim())).size < d.groups.length) ADM.msg = "Назви груп мають відрізнятися.";
     else {
       const used = new Set(d.groups.flatMap(g => g.draw)), item = { id: "L" + d.date.replace(/-/g, "") + (LIVE.items.length ? "-" + LIVE.items.length : ""), name: d.name.trim(), date: d.date, time: d.time, announce: d.announce, status: "live", players: d.players.filter(p => used.has(p.id)), groups: d.groups.map(g => ({ name: g.name.trim(), to: g.to, draw: g.draw, res: {}, tm: {} })) };
-      ADM.draft = null; ADM.tab = 0; admSave(item, d); return;
+      ADM.draft = null; ADM.tab = 0; admSave(item); return;
     }
   }
   else if (a === "ctab") { ADM.tab = +el.dataset.i; ADM.open = null; }
