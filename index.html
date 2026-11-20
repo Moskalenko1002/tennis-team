@@ -269,6 +269,15 @@ a.rk,.sr{text-decoration:none;color:inherit}
 .chip i{font-style:normal;background:#1b1000;color:#fff;border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-size:.75rem}
 .adm-msg{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem;font-weight:600}
 .adm-k{margin-bottom:.6rem}
+.now{background:var(--card);border:1px solid #D64545;border-radius:12px;padding:.6rem .9rem;margin:.8rem 0}
+.now>b{display:block;margin-bottom:.1rem}
+.tmr{font-variant-numeric:tabular-nums;font-weight:800;color:#D64545;white-space:nowrap}
+.tmr:before{content:"●";font-size:.7em;margin-right:.35em;animation:pulse 1.4s ease-in-out infinite}
+.tdur{font-variant-numeric:tabular-nums;color:var(--mute);font-size:.85rem;margin-right:.5rem;white-space:nowrap}
+.rrt{display:flex;align-items:center;gap:.5rem;white-space:nowrap}
+.chip.st{min-height:34px;font-size:.85rem}
+#adm .chk{display:flex;align-items:center;gap:.5rem}
+#adm .chk input{width:auto;min-height:auto}
 </style>
 </head>
 <body>
@@ -441,6 +450,7 @@ function rrRound(n, i, j) {
   return 0;
 }
 const rdOf = m => {
+  if (m.rd != null) return m.rd;
   const t = DATA.tournaments.find(x => x.id === m.tid), dr = t && t.draw && t.draw[m.t];
   if (!dr) return 0;
   const i = dr.indexOf(m.a) + 1, j = dr.indexOf(m.b) + 1;
@@ -451,7 +461,7 @@ const n1 = x => x == null ? "—" : x.toFixed(1).replace(".", ",");
 const ASOF = new URLSearchParams(location.search).get("asof") || new Date().toISOString().slice(0, 10); /* ?asof=2027-03-01 — переглянути, як знизиться вага */
 let S, VK, P, ranked; /* S — внутрішній український рейтинг і вага; VK — вклад кожної зустрічі (для переможця); P, ranked — гравці та рейтинг */
 function calcTournament(t) {
-  const ms = DATA.matches.filter(m => m.tid === t.id).sort((x, y) => rdOf(x) - rdOf(y));
+  const ms = DATA.matches.filter(m => m.tid === t.id && !m.carry).sort((x, y) => rdOf(x) - rdOf(y));
   const ids = [...new Set(ms.flatMap(m => [m.a, m.b]))], R = {}, B = {}, had = ids.filter(i => S[i]);
   ids.forEach(i => {
     if (S[i]) { R[i] = S[i].r; B[i] = S[i].b; return; }
@@ -485,7 +495,7 @@ if (TT.length) {
 EV.sort((x, y) => x.d.localeCompare(y.d) || (x.m ? 0 : 1) - (y.m ? 0 : 1));
 EV.forEach(e => e.m ? Object.values(S).forEach(q => { q.b = decay(q.b); }) : calcTournament(e.t));
 P = Object.fromEntries(DATA.players.map(p => [p.id, { ...p, r: START, rh: [START], b: S[p.id] ? S[p.id].b : 0, w: 0, l: 0, h: [] }]));
-[...DATA.matches].sort((x, y) => x.d.localeCompare(y.d) || rdOf(x) - rdOf(y)).forEach(m => {
+[...DATA.matches].filter(m => !m.carry).sort((x, y) => x.d.localeCompare(y.d) || rdOf(x) - rdOf(y)).forEach(m => {
   const rd = rdOf(m), a = P[m.a], b = P[m.b], ea = 1 / (1 + Math.pow(10, (b.r - a.r) / 400)), s = m.sa > m.sb ? 1 : 0;
   const dl = K * (s - ea); a.r += dl; b.r -= dl; a.rh.push(a.r); b.rh.push(b.r);
   (s ? (a.w++, b.l++) : (b.w++, a.l++));
@@ -521,8 +531,9 @@ function crossTable(g, gm, all) {
 
 /* ====== ТУРНІР НАЖИВО ====== */
 const LIVE = { items: [], key: "", at: null };
-function groupOrder(gm) {
+function groupOrder(gm, ids) {
   const S2 = {};
+  (ids || []).forEach(i => { S2[i] = { w: 0, l: 0, d: 0 }; });
   gm.forEach(m => {
     [m.a, m.b].forEach(i => S2[i] = S2[i] || { w: 0, l: 0, d: 0 });
     const w = m.sa > m.sb ? m.a : m.b, l = w === m.a ? m.b : m.a;
@@ -530,20 +541,58 @@ function groupOrder(gm) {
   });
   return Object.keys(S2).sort((x, y) => (2 * S2[y].w + S2[y].l) - (2 * S2[x].w + S2[x].l) || S2[y].d - S2[x].d);
 }
+const pow2 = n => { let p = 2; while (p < n) p *= 2; return p; };
+function seedOrder(P2) { let o = [1]; while (o.length < P2) { const n = o.length * 2; o = o.flatMap(x => [x, n + 1 - x]); } return o; }
+const brRoundName = c => c === 1 ? "Фінал" : c === 2 ? "Півфінали" : c === 4 ? "Чвертьфінали" : "1/" + (c * 2) + " фіналу";
+function brModel(b) {
+  const P2 = pow2(b.seeds.length), so = seedOrder(P2), res = b.res || {}, tms = b.tm || {};
+  const sc = k => res[k] ? res[k].split(":").map(Number) : null;
+  const mk = (key, a, c, bye) => { const sv = a && c ? sc(key) : null; return { key, a, b: c, s: sv, bye: !!bye, tm: tms[key], w: bye ? (a || c) : sv ? (sv[0] > sv[1] ? a : c) : null, l: sv ? (sv[0] > sv[1] ? c : a) : null }; };
+  let cur = [];
+  for (let i = 0; i < P2 / 2; i++) { const a = b.seeds[so[2 * i] - 1] || null, c = b.seeds[so[2 * i + 1] - 1] || null; cur.push(mk("1-" + (i + 1), a, c, !(a && c))); }
+  const rounds = [cur]; let r = 1;
+  while (cur.length > 1) { r++; const nx = []; for (let i = 0; i < cur.length / 2; i++) nx.push(mk(r + "-" + (i + 1), cur[2 * i].w, cur[2 * i + 1].w, false)); rounds.push(nx); cur = nx; }
+  const sf = rounds[rounds.length - 2], third = b.third && b.seeds.length >= 4 && sf ? mk("3rd", sf[0].l, sf[1].l, false) : null;
+  return { rounds, third };
+}
+const fmtDur = ms => { const t = Math.max(0, Math.floor(ms / 1000)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
+const nowS = () => Math.round(Date.now() / 1000);
+const tmHtml = tm => !tm || !tm[0] ? "" : tm[1] ? `<span class="tdur">⏱ ${fmtDur((tm[1] - tm[0]) * 1000)}</span>` : `<span class="tmr" data-s="${tm[0] * 1000}">${fmtDur(Date.now() - tm[0] * 1000)}</span>`;
+setInterval(() => document.querySelectorAll(".tmr").forEach(e => { e.textContent = fmtDur(Date.now() - (+e.dataset.s)); }), 1000);
+const nmOf = id => P[id] ? P[id].name : "?";
+const plink = id => id ? `<a href="#p-${id}">${esc(nmOf(id))}</a>` : `<span class="note" style="margin:0">очікується</span>`;
 function applyLive() {
   DATA.players = BASE.players.slice(); DATA.tournaments = BASE.tournaments.slice(); DATA.matches = BASE.matches.slice();
   LIVE.items.forEach(it => {
     (it.players || []).forEach(p => { if (!DATA.players.some(x => x.id === p.id)) DATA.players.push({ id: p.id, name: p.name, photo: "photos/" + p.id + ".jpg", group: it.groups[0] ? it.groups[0].name : O, born: p.born || undefined }); });
     if (it.announce) DATA.tournaments = DATA.tournaments.filter(t => t.id !== it.announce);
-    const t = { id: it.id, name: it.name, date: it.date, time: it.time, place: it.place || DATA.club.addr, status: it.status, live: true, draw: {}, to: {} };
+    const t = { id: it.id, name: it.name, date: it.date, time: it.time, place: it.place || DATA.club.addr, status: it.status, live: true, draw: {}, to: {}, tm: {}, playing: [] };
+    const sc = v => v.split(":").map(Number);
     it.groups.forEach(g => {
-      t.draw[g.name] = g.draw; t.to[g.name] = g.to || 3;
-      Object.entries(g.res || {}).forEach(([k, v]) => {
-        const [i, j] = k.split("-").map(Number), [sa, sb] = v.split(":").map(Number);
-        if (g.draw[i - 1] && g.draw[j - 1]) DATA.matches.push({ d: it.date, a: g.draw[i - 1], b: g.draw[j - 1], sa, sb, tid: it.id, t: g.name });
-      });
+      t.draw[g.name] = g.draw; t.to[g.name] = g.to || 3; t.tm[g.name] = g.tm || {};
+      const add = (k, v, carry) => {
+        const [i, j] = k.split("-").map(Number), [sa, sb] = sc(v);
+        if (g.draw[i - 1] && g.draw[j - 1]) DATA.matches.push({ d: it.date, a: g.draw[i - 1], b: g.draw[j - 1], sa, sb, tid: it.id, t: g.name, ...(carry ? { carry: 1 } : {}), ...(g.stage ? { rd: 1000 + rrRound(g.draw.length, i, j) } : {}) });
+      };
+      Object.entries(g.carry || {}).forEach(([k, v]) => add(k, v, true));
+      Object.entries(g.res || {}).forEach(([k, v]) => add(k, v, false));
+      Object.entries(g.tm || {}).forEach(([k, v]) => { if (v[0] && !v[1] && !(g.res || {})[k]) { const [i, j] = k.split("-").map(Number); if (g.draw[i - 1] && g.draw[j - 1]) t.playing.push({ g: g.name, a: g.draw[i - 1], b: g.draw[j - 1], s: v[0] }); } });
     });
-    if (it.status === "done") t.winners = it.groups.map(g => { const gm = DATA.matches.filter(m => m.tid === it.id && m.t === g.name); return gm.length ? { g: g.name, id: groupOrder(gm)[0] } : null; }).filter(Boolean);
+    if (it.br) {
+      t.br = it.br; t.brm = brModel(it.br); const rs = t.brm.rounds;
+      const push = (x, rd) => {
+        if (x.a && x.b && x.s) DATA.matches.push({ d: it.date, a: x.a, b: x.b, sa: x.s[0], sb: x.s[1], tid: it.id, t: it.br.name, br: 1, rd });
+        if (x.a && x.b && !x.s && x.tm && x.tm[0] && !x.tm[1]) t.playing.push({ g: it.br.name, a: x.a, b: x.b, s: x.tm[0] });
+      };
+      rs.forEach((r, ri) => r.forEach(x => { if (!x.bye) push(x, 2000 + ri + 1); }));
+      if (t.brm.third) push(t.brm.third, 2000 + rs.length);
+    }
+    if (it.status === "done") {
+      const champ = t.brm ? t.brm.rounds[t.brm.rounds.length - 1][0].w : null, g2 = it.groups.find(g => g.stage);
+      if (champ) t.winners = [{ g: "Переможець", id: champ }];
+      else if (g2) { const gm = DATA.matches.filter(m => m.tid === it.id && m.t === g2.name); if (gm.length) t.winners = [{ g: "Переможець", id: groupOrder(gm, g2.draw)[0] }]; }
+      else t.winners = it.groups.map(g => { const gm = DATA.matches.filter(m => m.tid === it.id && m.t === g.name); return gm.length ? { g: g.name, id: groupOrder(gm, g.draw)[0] } : null; }).filter(Boolean);
+    }
     DATA.tournaments.push(t);
   });
   compute();
@@ -557,6 +606,9 @@ async function fetchLive(force) {
     if (!d || !d.ok) return false;
     const key = JSON.stringify(d.items.map(i => [i.id, i.u, i.status]));
     LIVE.at = new Date();
+    const missing = LIVE.items.some(i => !d.items.some(x => x.id === i.id));
+    if (!force && missing && (LIVE.miss = (LIVE.miss || 0) + 1) < 2) { stamp(); return true; }
+    LIVE.miss = 0;
     if (force || key !== LIVE.key) { LIVE.items = d.items; LIVE.key = key; applyLive(); route(true); }
     stamp();
     return true;
@@ -613,7 +665,7 @@ function bindChart(root) {
 }
 function roundsHtml(t, ms) {
   return Object.entries(t.draw || {}).map(([gname, dr]) => {
-    const gm = ms.filter(m => m.t === gname), n = dr.length, N = n % 2 ? n + 1 : n, res = {};
+    const gm = ms.filter(m => m.t === gname), n = dr.length, N = n % 2 ? n + 1 : n, res = {}, tms = (t.tm || {})[gname] || {};
     gm.forEach(m => { const i = dr.indexOf(m.a) + 1, j = dr.indexOf(m.b) + 1; res[Math.min(i, j) + "-" + Math.max(i, j)] = i < j ? [m.sa, m.sb] : [m.sb, m.sa]; });
     const rounds = [];
     for (let r = 1; r < N; r++) {
@@ -625,15 +677,20 @@ function roundsHtml(t, ms) {
     const nm = i => `<a href="#p-${dr[i - 1]}">${P[dr[i - 1]] ? P[dr[i - 1]].name : "?"}</a>`;
     return `<h3 style="margin:1.4rem 0 .4rem">Тури: ${gname}</h3>` + rounds.map((pairs, k) => {
       const done = pairs.filter(([i, j]) => res[i + "-" + j]).length, busy = new Set(pairs.flat()), bye = n % 2 ? [...Array(n)].map((_, x) => x + 1).filter(x => !busy.has(x)) : [];
-      return `<details class="rd" ${k === cur ? "open" : ""}><summary>Тур ${k + 1} · ${done} з ${pairs.length}${k === cur ? " · зараз" : ""}</summary>${pairs.map(([i, j]) => { const r = res[i + "-" + j]; return `<div class="rr"><span>${nm(i)} — ${nm(j)}</span><b class="rsc ${r ? (r[0] > r[1] ? "w" : "l") : ""}">${r ? r[0] + ":" + r[1] : "—"}</b></div>`; }).join("")}${bye.length ? `<div class="rr"><span class="note" style="margin:0">Вільний тур: ${bye.map(nm).join(", ")}</span></div>` : ""}</details>`;
+      return `<details class="rd" ${k === cur ? "open" : ""}><summary>Тур ${k + 1} · ${done} з ${pairs.length}${k === cur ? " · зараз" : ""}</summary>${pairs.map(([i, j]) => { const key = i + "-" + j, r = res[key], tm = tms[key], run = tm && tm[0] && !tm[1] && !r; return `<div class="rr"><span>${nm(i)} — ${nm(j)}</span><span class="rrt">${tmHtml(tm)}${run ? "" : `<b class="rsc ${r ? (r[0] > r[1] ? "w" : "l") : ""}">${r ? r[0] + ":" + r[1] : "—"}</b>`}</span></div>`; }).join("")}${bye.length ? `<div class="rr"><span class="note" style="margin:0">Вільний тур: ${bye.map(nm).join(", ")}</span></div>` : ""}</details>`;
     }).join("");
   }).join("");
+}
+function brHtml(t) {
+  if (!t.brm) return "";
+  const m = t.brm, row = x => x.bye ? "" : `<div class="rr"><span>${plink(x.a)} — ${plink(x.b)}</span><span class="rrt">${tmHtml(x.tm)}${x.tm && x.tm[0] && !x.tm[1] && !x.s ? "" : `<b class="rsc ${x.s ? (x.s[0] > x.s[1] ? "w" : "l") : ""}">${x.s ? x.s[0] + ":" + x.s[1] : "—"}</b>`}</span></div>`;
+  return `<h3 style="margin:1.4rem 0 .4rem">${esc(t.br.name)}</h3>` + m.rounds.map(r => `<details class="rd" open><summary>${brRoundName(r.length)}</summary>${r.map(row).join("")}</details>`).join("") + (m.third ? `<details class="rd" open><summary>Матч за 3 місце</summary>${row(m.third)}</details>` : "");
 }
 const H = { a: "", b: "" };
 function renderH2H() {
   if (!H.a || !H.b) return `<p class="note">Оберіть двох гравців.</p>`;
   if (H.a === H.b) return `<p class="note">Оберіть різних гравців.</p>`;
-  const ms = DATA.matches.filter(m => (m.a === H.a && m.b === H.b) || (m.a === H.b && m.b === H.a)).sort((x, y) => x.d.localeCompare(y.d));
+  const ms = DATA.matches.filter(m => !m.carry && (m.a === H.a && m.b === H.b) || (m.a === H.b && m.b === H.a)).sort((x, y) => x.d.localeCompare(y.d));
   if (!ms.length) return `<p class="note">Вони ще не грали між собою.</p>`;
   let wa = 0;
   const rows = ms.map(m => {
@@ -722,7 +779,7 @@ const views = {
         <text x="171" y="141" text-anchor="middle" font-family="Onest, sans-serif" font-weight="800" font-size="24" fill="#fff" textLength="276" lengthAdjust="spacingAndGlyphs">ГРАЙ. <tspan fill="#FF7A1A">РОСТИ.</tspan> ПЕРЕМАГАЙ.</text>
       </svg>
       <p class="hx-p"><b>Клуб настільного тенісу</b>Тренування, оренда столів, турніри.</p>
-      <div class="hx-stats"><div><b>${ranked.length}</b>${pl(ranked.length, "гравець", "гравці", "гравців")}</div><div><b>${DATA.matches.length}</b>${pl(DATA.matches.length, "матч", "матчі", "матчів")}</div><div><b>${DATA.tournaments.length}</b>${pl(DATA.tournaments.length, "турнір", "турніри", "турнірів")}</div></div>
+      <div class="hx-stats"><div><b>${ranked.length}</b>${pl(ranked.length, "гравець", "гравці", "гравців")}</div><div><b>${DATA.matches.filter(m => !m.carry).length}</b>${pl(DATA.matches.filter(m => !m.carry).length, "матч", "матчі", "матчів")}</div><div><b>${DATA.tournaments.length}</b>${pl(DATA.tournaments.length, "турнір", "турніри", "турнірів")}</div></div>
       <div class="hx-btns"><a class="hb o" href="#schedule">Розклад</a><a class="hb l" href="${DATA.club.ig}">Instagram</a><a class="hb w" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Дзвінок</a></div>
     </section>
     ${lv ? `<a class="card accent live" href="#t-${lv.id}"><span class="tag live">● Іде зараз</span><h3 style="margin:.5rem 0 .3rem;font-size:1.15rem">${lv.name}</h3><div class="when">Результати оновлюються наживо</div><span class="go">Дивитись таблицю →</span></a>` : ""}
@@ -768,8 +825,9 @@ const views = {
     const t = DATA.tournaments.find(x => x.id === id);
     if (!t) return views.tournaments();
     const ms = DATA.matches.filter(m => m.tid === id);
-    const groups = [...new Set([...Object.keys(t.draw || {}), ...ms.map(m => m.t)])];
-    return `<p><a href="#tournaments">← Усі турніри</a></p><h2>${t.name}</h2><p class="sub">${fmt(t.date)}${t.time ? " о " + t.time : ""} · ${t.place}</p>${t.status === "live" ? `<p><span class="tag live">● Іде зараз</span> <span class="note" id="lvst" style="margin:0 0 0 .4rem"></span></p><p class="note" style="margin-top:0">Результати оновлюються автоматично. Натисніть на гравця, щоб відкрити його профіль.</p>` : `<p class="note" style="margin-top:0">Натисніть на гравця, щоб відкрити його профіль.</p>`}${groups.map(g => crossTable(g, ms.filter(m => m.t === g), (t.draw || {})[g])).join("")}<p class="note">Очки: 2 за перемогу, 1 за поразку. Місце визначається за очками, потім за різницею сетів.</p>${roundsHtml(t, ms)}`;
+    const groups = t.draw && Object.keys(t.draw).length ? Object.keys(t.draw) : [...new Set(ms.map(m => m.t))];
+    const now = t.status === "live" && t.playing && t.playing.length ? `<div class="now"><b>Зараз грають</b>${t.playing.map(x => `<div class="rr"><span><small class="note" style="margin:0">${esc(x.g)}</small><br>${plink(x.a)} — ${plink(x.b)}</span><span class="tmr" data-s="${x.s * 1000}">${fmtDur(Date.now() - x.s * 1000)}</span></div>`).join("")}</div>` : "";
+    return `<p><a href="#tournaments">← Усі турніри</a></p><h2>${t.name}</h2><p class="sub">${fmt(t.date)}${t.time ? " о " + t.time : ""} · ${t.place}</p>${t.status === "live" ? `<p><span class="tag live">● Іде зараз</span> <span class="note" id="lvst" style="margin:0 0 0 .4rem"></span></p><p class="note" style="margin-top:0">Результати оновлюються автоматично. Натисніть на гравця, щоб відкрити його профіль.</p>` : `<p class="note" style="margin-top:0">Натисніть на гравця, щоб відкрити його профіль.</p>`}${now}${groups.map(g => crossTable(g, ms.filter(m => m.t === g), (t.draw || {})[g])).join("")}<p class="note">Очки: 2 за перемогу, 1 за поразку. Місце визначається за очками, потім за різницею сетів.</p>${brHtml(t)}${roundsHtml(t, ms)}`;
   },
   stats: () => `
     <h2>Очна статистика</h2><p class="sub">Оберіть двох гравців — побачите, хто частіше вигравав.</p>
@@ -796,10 +854,9 @@ const views = {
     if (!p) return views.players();
     const i = ranked.findIndex(x => x.id === id), g = p.w + p.l;
     const tl = DATA.tournaments.map(t => {
-      const mine = DATA.matches.filter(m => m.tid === t.id && (m.a === id || m.b === id));
+      const mine = DATA.matches.filter(m => m.tid === t.id && !m.carry && (m.a === id || m.b === id));
       if (!mine.length) return "";
-      const grp = mine[0].t, [pl, n] = placeIn(DATA.matches.filter(m => m.tid === t.id && m.t === grp), id);
-      return `<div class="mr"><span>${t.name}<br><small>${grp}</small></span><span class="pill ${pl === 1 ? "w" : ""}">${pl === 1 ? "🥇 " : ""}${pl} місце з ${n}</span></div>`;
+      return [...new Set(mine.map(m => m.t))].filter(grp => !(t.br && grp === t.br.name)).map(grp => { const [pl, n] = placeIn(DATA.matches.filter(m => m.tid === t.id && m.t === grp), id); return `<div class="mr"><span>${t.name}<br><small>${grp}</small></span><span class="pill ${pl === 1 ? "w" : ""}">${pl === 1 ? "🥇 " : ""}${pl} місце з ${n}</span></div>`; }).join("");
     }).join("");
     const last = [...p.h].reverse().slice(0, 10).map(h => `<div class="mr"><span>${P[h.o].name}<br><small>${sd(h.d)} · ${h.dr >= 0 ? "+" : "−"}${Math.abs(Math.round(h.dr))} очок · вклад ${h.vk > 0 ? "+" : h.vk < 0 ? "−" : ""}${n1(Math.abs(h.vk))}</small></span><span class="pill ${h.win ? "w" : "l"}">${h.f}:${h.g} ${h.win ? "Перемога" : "Поразка"}</span></div>`).join("");
     const det = [p.hand ? ["Рука", p.hand + (p.grip ? ", " + p.grip : "")] : null, p.since ? ["У клубі з", p.since] : null, p.age ? ["Вік", p.age] : null].filter(Boolean).map(x => `<div class="mr"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
@@ -817,9 +874,12 @@ const views = {
 };
 
 /* ====== КЕРУВАННЯ ТУРНІРОМ (#admin) ====== */
-const ADM = { key: localStorage.getItem("ttkey") || "", draft: null, gi: 0, open: null, msg: "", tab: 0 };
+const ADM = { key: localStorage.getItem("ttkey") || "", draft: null, gi: 0, open: null, msg: "", tab: 0, s2: { type: "pools", k: 2, to: 3, carry: true, third: true } };
 const admLive = () => LIVE.items.find(i => i.status === "live") || null;
 const admAll = () => DATA.players.slice().sort((a, b) => a.name.localeCompare(b.name, "uk"));
+const admClone = o => JSON.parse(JSON.stringify(o));
+const admGM = g => Object.entries(g.res || {}).map(([k, v]) => { const [i, j] = k.split("-").map(Number), [sa, sb] = v.split(":").map(Number); return { a: g.draw[i - 1], b: g.draw[j - 1], sa, sb }; });
+const resFor = (g, A, B) => { const i = g.draw.indexOf(A) + 1, j = g.draw.indexOf(B) + 1, v = (g.res || {})[Math.min(i, j) + "-" + Math.max(i, j)]; if (!v) return null; const [x, y] = v.split(":"); return i < j ? [x, y] : [y, x]; };
 function admNewDraft() { return { announce: "", name: "", date: new Date().toISOString().slice(0, 10), time: "12:00", groups: [{ name: O, to: 3, draw: [] }], players: [] }; }
 function admHtml() {
   if (!DATA.live.endpoint) return `<p class="sub">Сервер для турніру наживо ще не підключено. Додайте адресу скрипта в налаштуваннях сайту (рядок <b>live: { endpoint: "…" }</b>).</p>`;
@@ -840,25 +900,69 @@ function admStart() {
   <label>Анонсований турнір<select id="ad-ann"><option value="">— інший —</option>${ups.map(t => `<option value="${t.id}" ${d.announce === t.id ? "selected" : ""}>${esc(t.name)} · ${sd(t.date)}</option>`).join("")}</select></label>
   <label>Назва<input id="ad-name" value="${esc(d.name)}" placeholder="TT Open #3"></label>
   <div class="adm-row"><label>Дата<input id="ad-date" type="date" value="${d.date}"></label><label>Час<input id="ad-time" type="time" value="${d.time}"></label></div>
-  <div class="adm-tabs">${d.groups.map((x, i) => `<button class="chip ${i === ADM.gi ? "on" : ""}" data-act="gtab" data-i="${i}" type="button">${esc(x.name)} (${x.draw.length})</button>`).join("")}<button class="chip" data-act="gadd" type="button">+ ліга</button></div>
-  <div class="adm-row"><label>Назва ліги<input id="ad-gname" value="${esc(g.name)}" list="ad-gl"><datalist id="ad-gl"><option value="${O}"><option value="${B}"></datalist></label><label>Гра до<select id="ad-to"><option value="3" ${g.to === 3 ? "selected" : ""}>3 перемог</option><option value="4" ${g.to === 4 ? "selected" : ""}>4 перемог</option></select></label></div>
+  <p class="note" style="margin:.8rem 0 0">1-й етап — групи (кожен з кожним). Додайте одну або кілька груп; 2-й етап (фінали, сітка) формується пізніше, коли групи зіграні.</p>
+  <div class="adm-tabs">${d.groups.map((x, i) => `<button class="chip ${i === ADM.gi ? "on" : ""}" data-act="gtab" data-i="${i}" type="button">${esc(x.name)} (${x.draw.length})</button>`).join("")}<button class="chip" data-act="gadd" type="button">+ група</button>${d.groups.length > 1 ? `<button class="chip" data-act="gdel" type="button">Видалити цю групу</button>` : ""}</div>
+  <div class="adm-row"><label>Назва групи<input id="ad-gname" value="${esc(g.name)}" list="ad-gl"><datalist id="ad-gl"><option value="${O}"><option value="${B}"><option value="Група А"><option value="Група Б"></datalist></label><label>Гра до<select id="ad-to"><option value="3" ${g.to === 3 ? "selected" : ""}>3 перемог</option><option value="4" ${g.to === 4 ? "selected" : ""}>4 перемог</option></select></label></div>
   <p class="note" style="margin:.4rem 0">Торкайтеся гравців <b>у порядку номерів жеребкування</b>: 1-й, 2-й, 3-й… Повторне торкання прибирає гравця.</p>
-  <div class="adm-chips">${all.map(p => { const n = g.draw.indexOf(p.id) + 1; return `<button class="chip ${n ? "on" : ""}" data-act="pick" data-id="${p.id}" type="button">${n ? `<i>${n}</i>` : ""}${esc(p.name)}</button>`; }).join("")}</div>
+  <div class="adm-chips">${all.map(p => { const n = g.draw.indexOf(p.id) + 1, inOther = !n && d.groups.some((x, i) => i !== ADM.gi && x.draw.includes(p.id)); return `<button class="chip ${n ? "on" : ""}" ${inOther ? 'style="opacity:.45"' : ""} data-act="pick" data-id="${p.id}" type="button">${n ? `<i>${n}</i>` : ""}${esc(p.name)}</button>`; }).join("")}</div>
   <div class="adm-row"><label>Новий гравець<input id="ad-nn" placeholder="Прізвище Ім’я"></label><label>Рік народж.<input id="ad-ny" inputmode="numeric" placeholder="2010"></label></div>
   <button class="chip" data-act="newp" type="button">+ Додати гравця</button>
   <p style="margin-top:1.2rem"><button class="btn" data-act="start" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700">Почати турнір</button></p>`;
 }
-function admControl(it) {
-  const g = it.groups[ADM.tab] || it.groups[0], dr = g.draw, n = dr.length, N = n % 2 ? n + 1 : n, res = g.res || {}, to = g.to || 3;
-  const nm = i => (P[dr[i - 1]] ? P[dr[i - 1]].name : "?");
-  const rounds = [];
+function admRows(it, g) {
+  const dr = g.draw, n = dr.length, N = n % 2 ? n + 1 : n, to = g.to || 3, tms = g.tm || {}, rounds = [];
+  const res = Object.assign({}, g.carry || {}, g.res || {});
   for (let r = 1; r < N; r++) { const pairs = []; for (let i = 1; i <= n; i++) for (let j = i + 1; j <= n; j++) if (rrRound(n, i, j) === r) pairs.push([i, j]); rounds.push(pairs); }
   const cur = rounds.findIndex(p => p.some(([i, j]) => !res[i + "-" + j]));
-  const chips = k => { const a = []; for (let x = 0; x < to; x++) a.push(to + ":" + x); for (let x = to - 1; x >= 0; x--) a.push(x + ":" + to); return a.map(v => `<button class="chip" data-act="score" data-k="${k}" data-v="${v}" type="button">${v}</button>`).join("") + `<button class="chip" data-act="score" data-k="${k}" data-v="" type="button">Очистити</button>`; };
+  const row = ([i, j]) => {
+    const key = i + "-" + j, v = (g.res || {})[key], c = (g.carry || {})[key], tm = tms[key], open = ADM.open === "G|" + g.name + "|" + key, run = tm && tm[0] && !tm[1] && !v;
+    const state = v ? `${tmHtml(tm)}<b class="rsc ${+v.split(":")[0] > +v.split(":")[1] ? "w" : "l"}">${v}</b>` : c ? `<b class="rsc">${c}</b><small class="note" style="margin:0 0 0 .3rem">з групи</small>` : run ? tmHtml(tm) : `<button class="chip st" data-act="mstart" data-k="${key}" type="button">▶ Старт</button>`;
+    return `<div class="rr adm-m" ${c && !v ? "" : `data-act="open" data-k="${key}"`}><span>${i}. ${esc(nmOf(dr[i - 1]))} — ${j}. ${esc(nmOf(dr[j - 1]))}</span><span class="rrt">${state}</span></div>${open ? admPanel(key, tm, v, to, false) : ""}`;
+  };
+  return rounds.map((pairs, k) => `<details class="rd" ${k === cur ? "open" : ""}><summary>Тур ${k + 1} · ${pairs.filter(([i, j]) => res[i + "-" + j]).length} з ${pairs.length}${k === cur ? " · зараз" : ""}</summary>${pairs.map(row).join("")}</details>`).join("");
+}
+function admPanel(key, tm, v, to, br) {
+  const a = [], at = br ? ' data-br="1"' : "";
+  for (let x = 0; x < to; x++) a.push(to + ":" + x);
+  for (let x = to - 1; x >= 0; x--) a.push(x + ":" + to);
+  const started = tm && tm[0];
+  return `<div class="adm-chips">${!started && !v ? `<button class="chip st" data-act="mstart" data-k="${key}"${at} type="button">▶ Почати зустріч</button>` : ""}${started && !tm[1] && !v ? `<button class="chip" data-act="mcancel" data-k="${key}"${at} type="button">Скасувати старт</button>` : ""}${a.map(x => `<button class="chip" data-act="score" data-k="${key}" data-v="${x}"${at} type="button">${x}</button>`).join("")}<button class="chip" data-act="score" data-k="${key}" data-v=""${at} type="button">Очистити</button></div>`;
+}
+function admBracket(it) {
+  const m = brModel(it.br), to = it.br.to || 3;
+  const row = x => {
+    if (x.bye) return "";
+    const v = (it.br.res || {})[x.key], ok = x.a && x.b, run = x.tm && x.tm[0] && !x.tm[1] && !v, open = ADM.open === "B|" + x.key;
+    const state = v ? `${tmHtml(x.tm)}<b class="rsc ${+v.split(":")[0] > +v.split(":")[1] ? "w" : "l"}">${v}</b>` : !ok ? `<small class="note" style="margin:0">очікується</small>` : run ? tmHtml(x.tm) : `<button class="chip st" data-act="mstart" data-k="${x.key}" data-br="1" type="button">▶ Старт</button>`;
+    return `<div class="rr adm-m" ${ok ? `data-act="open" data-br="1" data-k="${x.key}"` : ""}><span>${esc(x.a ? nmOf(x.a) : "?")} — ${esc(x.b ? nmOf(x.b) : "?")}</span><span class="rrt">${state}</span></div>${open && ok ? admPanel(x.key, x.tm, v, to, true) : ""}`;
+  };
+  return `<h3 style="margin:1rem 0 .4rem">${esc(it.br.name)}</h3>` + m.rounds.map(r => `<details class="rd" open><summary>${brRoundName(r.length)}</summary>${r.map(row).join("")}</details>`).join("") + (m.third ? `<details class="rd" open><summary>Матч за 3 місце</summary>${row(m.third)}</details>` : "");
+}
+function admStage2(it) {
+  const has = it.br || it.groups.some(g => g.stage), o = ADM.s2;
+  if (has) return `<h3 style="margin-top:1.6rem">2-й етап</h3><p class="note" style="margin-top:0">Сформовано: ${it.br ? "сітка плей-оф" : it.s2 === "places" ? "стикові матчі за місцями" : "фінали за місцями"}. Результати вносяться у вкладках вище.</p><button class="chip" data-act="s2cancel" type="button">Скасувати 2-й етап</button>`;
+  return `<h3 style="margin-top:1.6rem">2-й етап</h3>
+  <label>Формат<select id="s2-type"><option value="pools" ${o.type === "pools" ? "selected" : ""}>Фінали за місцями (1–4, 5–8…)</option><option value="bracket" ${o.type === "bracket" ? "selected" : ""}>Сітка плей-оф</option><option value="places" ${o.type === "places" ? "selected" : ""}>Стикові матчі за місцями (2 групи)</option></select></label>
+  <div class="adm-row">${o.type !== "places" ? `<label>З кожної групи<select id="s2-k">${[1, 2, 3, 4].map(k => `<option value="${k}" ${o.k === k ? "selected" : ""}>${k}</option>`).join("")}</select></label>` : ""}<label>Гра до<select id="s2-to"><option value="3" ${o.to === 3 ? "selected" : ""}>3 перемог</option><option value="4" ${o.to === 4 ? "selected" : ""}>4 перемог</option></select></label></div>
+  ${o.type === "pools" ? `<label class="chk"><input type="checkbox" id="s2-carry" ${o.carry ? "checked" : ""}> Зараховувати результати з групи</label>` : ""}${o.type === "bracket" ? `<label class="chk"><input type="checkbox" id="s2-third" ${o.third ? "checked" : ""}> Матч за 3 місце</label>` : ""}
+  <p class="note">${o.type === "pools" ? "Перші K з кожної групи грають фінал за 1–" + "…, наступні K — другий фінал і т. д. (кожен з кожним)." : o.type === "bracket" ? "Перші K з кожної групи потрапляють у сітку навхрест (1 група — 2 місце іншої)." : "Місце k однієї групи грає з місцем k іншої: за 1–2, 3–4, 5–6…"} Склад формується за поточними таблицями груп.</p>
+  <button class="btn" data-act="s2make" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700">Сформувати 2-й етап</button>`;
+}
+function admControl(it) {
+  const nG = it.groups.length, tabs = it.groups.map(g => g.name).concat(it.br ? [it.br.name] : []);
+  if (ADM.tab >= tabs.length) ADM.tab = 0;
+  const isBr = !!it.br && ADM.tab === nG, t = DATA.tournaments.find(x => x.id === it.id), g = it.groups[ADM.tab];
+  const playing = t && t.playing && t.playing.length ? `<div class="now"><b>Зараз грають</b>${t.playing.map(x => `<div class="rr"><span><small class="note" style="margin:0">${esc(x.g)}</small><br>${esc(nmOf(x.a))} — ${esc(nmOf(x.b))}</span><span class="tmr" data-s="${x.s * 1000}">${fmtDur(Date.now() - x.s * 1000)}</span></div>`).join("")}</div>` : "";
+  let body;
+  if (isBr) body = admBracket(it);
+  else {
+    const ms = DATA.matches.filter(m => m.tid === it.id && m.t === g.name);
+    body = `<details class="rd" open><summary>Таблиця: ${esc(g.name)}</summary><div style="margin:.4rem 0">${crossTable(g.name, ms, g.draw).replace(/<h3[^>]*>.*?<\/h3>/, "").replace(/<a [^>]*>(.*?)<\/a>/g, "$1")}</div></details>${admRows(it, g)}`;
+  }
   return `<h3 style="margin-top:1.2rem">${esc(it.name)} <span class="tag live">● Іде зараз</span></h3>
-  <p class="note" style="margin-top:0">Внесіть результат — він одразу з’явиться на сайті (оновлення у глядачів до ~20 с).</p>
-  <div class="adm-tabs">${it.groups.map((x, i) => `<button class="chip ${i === ADM.tab ? "on" : ""}" data-act="ctab" data-i="${i}" type="button">${esc(x.name)}</button>`).join("")}</div>
-  ${rounds.map((pairs, k) => `<details class="rd" ${k === cur ? "open" : ""}><summary>Тур ${k + 1} · ${pairs.filter(([i, j]) => res[i + "-" + j]).length} з ${pairs.length}${k === cur ? " · зараз" : ""}</summary>${pairs.map(([i, j]) => { const key = i + "-" + j, v = res[key]; return `<div class="rr adm-m" data-act="open" data-k="${key}"><span>${i}. ${esc(nm(i))} — ${j}. ${esc(nm(j))}</span><b class="rsc ${v ? (+v.split(":")[0] > +v.split(":")[1] ? "w" : "l") : ""}">${v || "внести"}</b></div>${ADM.open === g.name + "|" + key ? `<div class="adm-chips">${chips(key)}</div>` : ""}`; }).join("")}</details>`).join("")}
+  <p class="note" style="margin-top:0">Натисніть «▶ Старт», коли зустріч починається — на сайті з’явиться секундомір. Потім торкніться рядка й виберіть рахунок: час зупиниться, результат одразу побачать усі (до ~20 с).</p>${playing}
+  <div class="adm-tabs">${tabs.map((n, i) => `<button class="chip ${i === ADM.tab ? "on" : ""}" data-act="ctab" data-i="${i}" type="button">${esc(n)}</button>`).join("")}</div>
+  ${body}${admStage2(it)}
   <p style="margin-top:1.4rem"><button class="btn" data-act="finish" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700">Завершити турнір</button> <button class="chip" data-act="del" data-id="${it.id}" type="button">Видалити турнір</button></p>`;
 }
 function admRender() { const b = document.getElementById("adm"); if (b) b.innerHTML = admHtml(); }
@@ -866,15 +970,20 @@ function admInit() {
   const b = document.getElementById("adm"); if (!b) return;
   b.innerHTML = admHtml();
   b.addEventListener("input", e => {
-    const d = ADM.draft, t = e.target; if (!d) return;
+    const d = ADM.draft, t = e.target, o = ADM.s2;
+    if (t.id === "s2-type") { o.type = t.value; admRender(); return; }
+    if (t.id === "s2-k") { o.k = +t.value; return; }
+    if (t.id === "s2-to") { o.to = +t.value; return; }
+    if (t.id === "s2-carry") { o.carry = t.checked; return; }
+    if (t.id === "s2-third") { o.third = t.checked; return; }
+    if (!d) return;
     if (t.id === "ad-name") d.name = t.value; else if (t.id === "ad-date") d.date = t.value; else if (t.id === "ad-time") d.time = t.value;
-    else if (t.id === "ad-gname") { d.groups[ADM.gi].name = t.value; }
+    else if (t.id === "ad-gname") d.groups[ADM.gi].name = t.value;
     else if (t.id === "ad-to") d.groups[ADM.gi].to = +t.value;
     else if (t.id === "ad-ann") { d.announce = t.value; const a = BASE.tournaments.find(x => x.id === t.value); if (a) { d.name = a.name; d.date = a.date; d.time = a.time || d.time; } admRender(); }
   });
   b.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (el) admAct(el); });
 }
-function admClone(o) { return JSON.parse(JSON.stringify(o)); }
 async function admSave(item, draft) {
   item.u = Date.now(); ADM.msg = "Збереження…";
   const prev = LIVE.items, undo = msg => { LIVE.items = prev; LIVE.key = ""; applyLive(); if (draft) ADM.draft = draft; ADM.msg = msg; admRender(); route(true); return false; };
@@ -893,27 +1002,70 @@ async function admDelete(id) {
   try { await fetch(DATA.live.endpoint, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key: ADM.key, action: "delete", id }) }); } catch (x) { }
   LIVE.items = LIVE.items.filter(i => i.id !== id); LIVE.key = ""; applyLive(); ADM.msg = "Видалено."; admRender(); route(true);
 }
+function admS2Make(it) {
+  const o = ADM.s2, s1 = it.groups.filter(g => !g.stage);
+  if (!s1.length) return "Немає груп.";
+  const total = s1.reduce((a, g) => a + g.draw.length * (g.draw.length - 1) / 2, 0), played = s1.reduce((a, g) => a + Object.keys(g.res || {}).length, 0);
+  if (played < total && !confirm("Групи зіграні не повністю (" + played + " з " + total + "). Сформувати 2-й етап за поточними таблицями?")) return "Скасовано.";
+  const order = s1.map(g => groupOrder(admGM(g), g.draw)), to = o.to, units = [];
+  if (o.type === "pools") {
+    const K = o.k, maxLen = Math.max(...order.map(x => x.length)); let start = 1;
+    for (let p = 0; p * K < maxLen; p++) {
+      const mem = [];
+      for (let q = p * K; q < (p + 1) * K; q++) order.forEach((ord, gi) => { if (ord[q]) mem.push({ id: ord[q], gi }); });
+      if (mem.length < 2) { start += mem.length; continue; }
+      const carry = {};
+      if (o.carry) for (let a = 0; a < mem.length; a++) for (let b = a + 1; b < mem.length; b++) if (mem[a].gi === mem[b].gi) { const r = resFor(s1[mem[a].gi], mem[a].id, mem[b].id); if (r) carry[(a + 1) + "-" + (b + 1)] = r[0] + ":" + r[1]; }
+      units.push({ name: "Місця " + start + "–" + (start + mem.length - 1), to, draw: mem.map(x => x.id), res: {}, tm: {}, carry, stage: 2 });
+      start += mem.length;
+    }
+    if (!units.length) return "Замало гравців для фінальних груп.";
+    it.groups.push(...units);
+  } else if (o.type === "places") {
+    if (s1.length !== 2) return "Стикові матчі за місцями — лише для двох груп.";
+    for (let p = 0; p < Math.max(order[0].length, order[1].length); p++) if (order[0][p] && order[1][p]) units.push({ name: "Місця " + (2 * p + 1) + "–" + (2 * p + 2), to, draw: [order[0][p], order[1][p]], res: {}, tm: {}, carry: {}, stage: 2 });
+    if (!units.length) return "Замало гравців.";
+    it.groups.push(...units);
+  } else {
+    const seeds = [];
+    for (let q = 0; q < o.k; q++) order.forEach(ord => { if (ord[q]) seeds.push(ord[q]); });
+    if (seeds.length < 2) return "Замало гравців для сітки.";
+    it.br = { name: "Плей-оф", seeds, to, third: !!o.third, res: {}, tm: {} };
+  }
+  it.s2 = o.type; return "";
+}
 function admAct(el) {
-  const a = el.dataset.act, d = ADM.draft, lv = admLive();
+  const a = el.dataset.act, d = ADM.draft, lv = admLive(), k = el.dataset.k;
+  const tg = it => el.dataset.br ? it.br : it.groups[ADM.tab];
   if (a === "key") { ADM.key = document.getElementById("adk").value.trim(); localStorage.setItem("ttkey", ADM.key); ADM.msg = "Ключ збережено на цьому пристрої."; }
   else if (a === "gtab") ADM.gi = +el.dataset.i;
-  else if (a === "gadd") { d.groups.push({ name: B, to: 3, draw: [] }); ADM.gi = d.groups.length - 1; }
-  else if (a === "pick") { const g = d.groups[ADM.gi], id = el.dataset.id, k = g.draw.indexOf(id); if (k >= 0) g.draw.splice(k, 1); else g.draw.push(id); }
+  else if (a === "gadd") { d.groups.push({ name: "Група " + "АБВГДЕ"[d.groups.length] || B, to: 3, draw: [] }); ADM.gi = d.groups.length - 1; }
+  else if (a === "gdel") { d.groups.splice(ADM.gi, 1); ADM.gi = 0; }
+  else if (a === "pick") { const g = d.groups[ADM.gi], id = el.dataset.id, i = g.draw.indexOf(id); if (i >= 0) g.draw.splice(i, 1); else g.draw.push(id); }
   else if (a === "newp") {
     const n = document.getElementById("ad-nn").value.trim(), y = +document.getElementById("ad-ny").value || undefined;
     if (n.length < 3) { ADM.msg = "Вкажіть прізвище та ім’я нового гравця."; } else { const id = "x" + Date.now().toString(36); d.players.push({ id, name: n, born: y }); d.groups[ADM.gi].draw.push(id); ADM.msg = ""; }
   }
   else if (a === "start") {
     const bad = d.groups.find(g => g.draw.length < 3);
-    if (!d.name.trim()) ADM.msg = "Вкажіть назву турніру."; else if (bad) ADM.msg = "У лізі «" + bad.name + "» має бути щонайменше 3 учасники."; else if (new Set(d.groups.map(g => g.name)).size < d.groups.length) ADM.msg = "Назви ліг мають відрізнятися.";
+    if (!d.name.trim()) ADM.msg = "Вкажіть назву турніру."; else if (bad) ADM.msg = "У групі «" + bad.name + "» має бути щонайменше 3 учасники."; else if (new Set(d.groups.map(g => g.name.trim())).size < d.groups.length) ADM.msg = "Назви груп мають відрізнятися.";
     else {
-      const used = new Set(d.groups.flatMap(g => g.draw)), item = { id: "L" + d.date.replace(/-/g, "") + (LIVE.items.length ? "-" + LIVE.items.length : ""), name: d.name.trim(), date: d.date, time: d.time, announce: d.announce, status: "live", players: d.players.filter(p => used.has(p.id)), groups: d.groups.map(g => ({ name: g.name.trim(), to: g.to, draw: g.draw, res: {} })) };
+      const used = new Set(d.groups.flatMap(g => g.draw)), item = { id: "L" + d.date.replace(/-/g, "") + (LIVE.items.length ? "-" + LIVE.items.length : ""), name: d.name.trim(), date: d.date, time: d.time, announce: d.announce, status: "live", players: d.players.filter(p => used.has(p.id)), groups: d.groups.map(g => ({ name: g.name.trim(), to: g.to, draw: g.draw, res: {}, tm: {} })) };
       ADM.draft = null; ADM.tab = 0; admSave(item, d); return;
     }
   }
-  else if (a === "ctab") ADM.tab = +el.dataset.i;
-  else if (a === "open") { const g = lv.groups[ADM.tab], k = g.name + "|" + el.dataset.k; ADM.open = ADM.open === k ? null : k; }
-  else if (a === "score") { const it = admClone(lv), g = it.groups[ADM.tab]; g.res = g.res || {}; if (el.dataset.v) g.res[el.dataset.k] = el.dataset.v; else delete g.res[el.dataset.k]; ADM.open = null; admSave(it); return; }
+  else if (a === "ctab") { ADM.tab = +el.dataset.i; ADM.open = null; }
+  else if (a === "open") { const o = el.dataset.br ? "B|" + k : "G|" + lv.groups[ADM.tab].name + "|" + k; ADM.open = ADM.open === o ? null : o; }
+  else if (a === "mstart") { const it = admClone(lv), g = tg(it); g.tm = g.tm || {}; g.tm[k] = [nowS()]; ADM.open = null; admSave(it); return; }
+  else if (a === "mcancel") { const it = admClone(lv), g = tg(it); if (g.tm) delete g.tm[k]; ADM.open = null; admSave(it); return; }
+  else if (a === "score") {
+    const it = admClone(lv), g = tg(it), v = el.dataset.v; g.res = g.res || {}; g.tm = g.tm || {};
+    if (v) { g.res[k] = v; if (g.tm[k] && g.tm[k][0] && !g.tm[k][1]) g.tm[k][1] = nowS(); }
+    else { delete g.res[k]; if (g.tm[k]) g.tm[k] = [g.tm[k][0]]; }
+    ADM.open = null; admSave(it); return;
+  }
+  else if (a === "s2make") { const it = admClone(lv), err = admS2Make(it); if (err) ADM.msg = err; else { ADM.msg = ""; ADM.tab = it.br ? it.groups.length : it.groups.length - 1; admSave(it); return; } }
+  else if (a === "s2cancel") { if (confirm("Скасувати 2-й етап? Його результати буде видалено.")) { const it = admClone(lv); it.groups = it.groups.filter(g => !g.stage); delete it.br; delete it.s2; ADM.tab = 0; admSave(it); } return; }
   else if (a === "finish") { if (confirm("Завершити турнір? Результати залишаться на сайті, рейтинг уже враховано.")) { const it = admClone(lv); it.status = "done"; admSave(it); } return; }
   else if (a === "reopen") { const it = admClone(LIVE.items.find(i => i.id === el.dataset.id)); it.status = "live"; ADM.tab = 0; admSave(it); return; }
   else if (a === "del") { if (confirm("Видалити турнір повністю? Це не можна скасувати.")) admDelete(el.dataset.id); return; }
