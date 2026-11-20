@@ -564,6 +564,7 @@ const plink = id => id ? `<a href="#p-${id}">${esc(nmOf(id))}</a>` : `<span clas
 function applyLive() {
   DATA.players = BASE.players.slice(); DATA.tournaments = BASE.tournaments.slice(); DATA.matches = BASE.matches.slice();
   LIVE.items.forEach(it => {
+    if (it.status === "test" || !it.groups) return;
     (it.players || []).forEach(p => { if (!DATA.players.some(x => x.id === p.id)) DATA.players.push({ id: p.id, name: p.name, photo: "photos/" + p.id + ".jpg", group: it.groups[0] ? it.groups[0].name : O, born: p.born || undefined }); });
     if (it.announce) DATA.tournaments = DATA.tournaments.filter(t => t.id !== it.announce);
     const t = { id: it.id, name: it.name, date: it.date, time: it.time, place: it.place || DATA.club.addr, status: it.status, live: true, draw: {}, to: {}, tm: {}, playing: [] };
@@ -1007,7 +1008,7 @@ async function postItem(item) {
     const r = await fetch(DATA.live.endpoint + "?t=" + Date.now(), { cache: "no-store" }), d = await r.json();
     if (d && d.items && d.items.some(i => i.id === item.id && i.u === item.u)) return { ok: true };
   } catch (x) { }
-  return { ok: false, err: txt ? "сервер відповів не так, як очікувалось («" + txt.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 90) + "»). Скрипт оновлено й розгорнуто як «Нова версія»?" : "немає зв’язку із сервером" };
+  return { ok: false, err: txt ? "сервер відповів не так, як очікувалось («" + txt.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 90) + "»). Скрипт оновлено й розгорнуто як «Нова версія»?" : "відповідь сервера не прочитано (мережа, блокування або помилка в скрипті). Натисніть «Перевірити сервер» і надішліть мені результат" };
 }
 async function flush() {
   if (SYNC.busy) return;
@@ -1039,8 +1040,17 @@ async function admDelete(id) {
 }
 async function admPing() {
   const ep = DATA.live.endpoint, out = [];
-  try { const r = await fetch(ep + "?t=" + Date.now(), { cache: "no-store" }), t = await r.text(); try { const d = JSON.parse(t); out.push("Читання: OK, турнірів на сервері: " + d.items.length); } catch (x) { out.push("Читання: відповідь не JSON — " + t.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 120)); } } catch (x) { out.push("Читання: немає зв’язку (" + x.message + ")"); }
-  try { const r = await fetch(ep, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key: ADM.key, action: "ping" }) }), t = await r.text(); try { const d = JSON.parse(t); out.push(d.ok ? "Запис: OK, ключ вірний" : d.error === "key" ? "Запис: НЕВІРНИЙ КЛЮЧ" : "Запис: помилка " + (d.error || "")); } catch (x) { out.push("Запис: відповідь не JSON — " + t.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 120)); } } catch (x) { out.push("Запис: немає зв’язку (" + x.message + ")"); }
+  const post = async obj => { const r = await fetch(ep, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ key: ADM.key }, obj)) }), t = await r.text(); try { return JSON.parse(t); } catch (x) { return { raw: t.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 140) || "(порожня відповідь)" }; } };
+  const verdict = d => d.raw ? "відповідь не JSON — " + d.raw : d.ok ? "OK" + (d.v ? " (версія скрипта " + d.v + ")" : " (СТАРА версія скрипта — розгорніть «Нову версію»)") : d.error === "key" ? "НЕВІРНИЙ КЛЮЧ" : "помилка: " + d.error;
+  const step = async (name, fn) => { try { out.push(name + ": " + await fn()); } catch (x) { out.push(name + ": ПОМИЛКА зв’язку (" + (x.message || x) + ")"); } ADM.diag = out.join("\n"); admRender(); };
+  const read = async () => { const r = await fetch(ep + "?t=" + Date.now(), { cache: "no-store" }); return JSON.parse(await r.text()); };
+  const tiny = { id: "ZTEST", name: "тест", status: "test", groups: [], u: Date.now() }, big = Object.assign({}, tiny, { note: "Тест ".repeat(1500) });
+  await step("1. Читання", async () => { const d = await read(); return "OK, турнірів: " + d.items.length + (d.v ? ", версія скрипта " + d.v : ", СТАРА версія скрипта"); });
+  await step("2. Ключ", async () => verdict(await post({ action: "ping" })));
+  await step("3. Збереження (малий запис)", async () => verdict(await post({ action: "save", item: tiny })));
+  await step("4. Читання назад", async () => { const d = await read(); return d.items.some(i => i.id === "ZTEST" && i.u === tiny.u) ? "OK" : "запис НЕ знайдено на сервері"; });
+  await step("5. Збереження (великий запис)", async () => verdict(await post({ action: "save", item: big })));
+  await step("6. Прибирання", async () => verdict(await post({ action: "delete", id: "ZTEST" })));
   ADM.diag = out.join("\n"); admRender();
 }
 function admS2Make(it) {
