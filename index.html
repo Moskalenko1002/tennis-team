@@ -564,7 +564,7 @@ const plink = id => id ? `<a href="#p-${id}">${esc(nmOf(id))}</a>` : `<span clas
 function applyLive() {
   DATA.players = BASE.players.slice(); DATA.tournaments = BASE.tournaments.slice(); DATA.matches = BASE.matches.slice();
   LIVE.items.forEach(it => {
-    if (it.status === "test" || !it.groups) return;
+    if (it.status === "test" || !it.groups || (it.test && !ADM.key)) return;
     (it.players || []).forEach(p => { if (!DATA.players.some(x => x.id === p.id)) DATA.players.push({ id: p.id, name: p.name, photo: "photos/" + p.id + ".jpg", group: it.groups[0] ? it.groups[0].name : O, born: p.born || undefined }); });
     if (it.announce) DATA.tournaments = DATA.tournaments.filter(t => t.id !== it.announce);
     const t = { id: it.id, name: it.name, date: it.date, time: it.time, place: it.place || DATA.club.addr, status: it.status, live: true, draw: {}, to: {}, tm: {}, playing: [] };
@@ -599,8 +599,8 @@ function applyLive() {
   compute();
 }
 function stamp() { const e = document.getElementById("lvst"); if (e && LIVE.at) e.textContent = "Оновлено " + LIVE.at.toLocaleTimeString("uk-UA"); }
-const SYNC = { pending: {}, busy: false, err: "", fatal: false, ok: false };
-async function fetchLive(force) {
+const SYNC = { pending: {}, saved: {}, busy: false, err: "", fatal: false, ok: false };
+async function fetchLive(force, again) {
   if (!DATA.live.endpoint) return false;
   try {
     const r = await fetch(DATA.live.endpoint + (DATA.live.endpoint.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
@@ -609,18 +609,18 @@ async function fetchLive(force) {
     /* локальні, ще не збережені зміни адміністратора мають пріоритет над відповіддю сервера */
     const merged = d.items.map(si => (SYNC.pending[si.id] && SYNC.pending[si.id] > si.u && LIVE.items.find(x => x.id === si.id)) || si);
     Object.keys(SYNC.pending).forEach(id => { if (!merged.some(x => x.id === id)) { const li = LIVE.items.find(x => x.id === id); if (li) merged.push(li); } });
+    Object.keys(SYNC.saved).forEach(id => { if (Date.now() - SYNC.saved[id] < 30000 && !merged.some(x => x.id === id)) { const li = LIVE.items.find(x => x.id === id); if (li) merged.push(li); } });
     const key = JSON.stringify(merged.map(i => [i.id, i.u, i.status]));
     LIVE.at = new Date();
     const missing = LIVE.items.some(i => !merged.some(x => x.id === i.id));
-    if (!force && missing && (LIVE.miss = (LIVE.miss || 0) + 1) < 2) { stamp(); return true; }
-    LIVE.miss = 0;
+    if (!force && missing && !again) { await new Promise(r => setTimeout(r, 1500)); return fetchLive(false, true); }
     if (force || key !== LIVE.key) { LIVE.items = merged; LIVE.key = key; applyLive(); route(true); }
     stamp();
     return true;
   } catch (e) { return false; }
 }
 function pollLoop() {
-  (document.hidden ? Promise.resolve() : fetchLive()).finally(() => setTimeout(pollLoop, LIVE.items.some(i => i.status === "live") ? 10000 : 60000));
+  (document.hidden ? Promise.resolve() : fetchLive()).finally(() => setTimeout(pollLoop, LIVE.items.some(i => i.status === "live") ? 10000 : 30000));
 }
 const sd = d => new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month: "long" });
 function placeIn(gm, pid) {
@@ -885,16 +885,20 @@ const admAll = () => DATA.players.slice().sort((a, b) => a.name.localeCompare(b.
 const admClone = o => JSON.parse(JSON.stringify(o));
 const admGM = g => Object.entries(g.res || {}).map(([k, v]) => { const [i, j] = k.split("-").map(Number), [sa, sb] = v.split(":").map(Number); return { a: g.draw[i - 1], b: g.draw[j - 1], sa, sb }; });
 const resFor = (g, A, B) => { const i = g.draw.indexOf(A) + 1, j = g.draw.indexOf(B) + 1, v = (g.res || {})[Math.min(i, j) + "-" + Math.max(i, j)]; if (!v) return null; const [x, y] = v.split(":"); return i < j ? [x, y] : [y, x]; };
-function admNewDraft() { return { announce: "", name: "", date: new Date().toISOString().slice(0, 10), time: "12:00", groups: [{ name: O, to: 3, draw: [] }], players: [] }; }
+function admNewDraft() { return { announce: "", name: "", date: new Date().toISOString().slice(0, 10), time: "12:00", groups: [{ name: O, to: 3, draw: [] }], players: [], test: false }; }
 function admHtml() {
   if (!DATA.live.endpoint) return `<p class="sub">Сервер для турніру наживо ще не підключено. Додайте адресу скрипта в налаштуваннях сайту (рядок <b>live: { endpoint: "…" }</b>).</p>`;
   const keyBox = `<div class="adm-k"><label>Ключ доступу<input type="password" id="adk" value="${esc(ADM.key)}" autocomplete="off"></label><button class="btn" data-act="key" type="button">Запам’ятати ключ</button> <button class="chip" data-act="ping" type="button">Перевірити сервер</button></div>`;
   const pend = Object.keys(SYNC.pending).length, sync = SYNC.err ? `<p class="adm-msg" style="border-color:#D64545" role="alert">⚠ Не збережено на сервері: ${esc(SYNC.err)}. ${SYNC.fatal ? "Перевірте ключ угорі й натисніть «Повторити»." : "Повторюю автоматично."} <button class="chip" data-act="retry" type="button">Повторити</button></p>` : pend ? `<p class="adm-msg" role="status">Збереження…</p>` : SYNC.ok ? `<p class="adm-msg" role="status">Збережено ✓</p>` : "";
   const msg = sync + (ADM.msg ? `<p class="adm-msg" role="status">${esc(ADM.msg)}</p>` : "") + (ADM.diag ? `<pre class="su-msg">${esc(ADM.diag)}</pre>` : "");
   const lv = admLive();
-  if (lv) return keyBox + msg + admControl(lv);
+  if (lv) return keyBox + msg + admControl(lv) + admAllList();
   if (!ADM.draft) ADM.draft = admNewDraft();
-  return keyBox + msg + admStart() + admDone();
+  return keyBox + msg + admStart() + admAllList();
+}
+function admAllList() {
+  const all = LIVE.items;
+  return all.length ? `<h3 style="margin-top:1.8rem">Усі турніри на сервері</h3><p class="note" style="margin-top:0">Тут можна видалити будь-який, навіть пробний чи зайвий.</p>${all.map(i => `<div class="rr"><span>${esc(i.name || i.id)} · ${i.date ? sd(i.date) : ""} · ${i.status === "live" ? "іде" : i.status === "done" ? "завершено" : esc(i.status || "?")}${i.test ? " · пробний" : ""}</span><span>${i.status === "done" ? `<button class="chip" data-act="reopen" data-id="${i.id}" type="button">Відкрити</button> ` : ""}<button class="chip" data-act="del" data-id="${i.id}" type="button">Видалити</button></span></div>`).join("")}` : "";
 }
 function admDone() {
   const d = LIVE.items.filter(i => i.status === "done");
@@ -906,9 +910,10 @@ function admStart() {
   <label>Анонсований турнір<select id="ad-ann"><option value="">— інший —</option>${ups.map(t => `<option value="${t.id}" ${d.announce === t.id ? "selected" : ""}>${esc(t.name)} · ${sd(t.date)}</option>`).join("")}</select></label>
   <label>Назва<input id="ad-name" value="${esc(d.name)}" placeholder="TT Open #3"></label>
   <div class="adm-row"><label>Дата<input id="ad-date" type="date" value="${d.date}"></label><label>Час<input id="ad-time" type="time" value="${d.time}"></label></div>
+  <label class="chk"><input type="checkbox" id="ad-test" ${d.test ? "checked" : ""}> Пробний турнір (його бачите лише ви; глядачам і рейтингу він не показується)</label>
   <p class="note" style="margin:.8rem 0 0">1-й етап — групи (кожен з кожним). Додайте одну або кілька груп; 2-й етап (фінали, сітка) формується пізніше, коли групи зіграні.</p>
   <div class="adm-tabs">${d.groups.map((x, i) => `<button class="chip ${i === ADM.gi ? "on" : ""}" data-act="gtab" data-i="${i}" type="button">${esc(x.name)} (${x.draw.length})</button>`).join("")}<button class="chip" data-act="gadd" type="button">+ група</button>${d.groups.length > 1 ? `<button class="chip" data-act="gdel" type="button">Видалити цю групу</button>` : ""}</div>
-  <div class="adm-row"><label>Назва групи<input id="ad-gname" value="${esc(g.name)}" list="ad-gl"><datalist id="ad-gl"><option value="${O}"><option value="${B}"><option value="Група А"><option value="Група Б"></datalist></label><label>Гра до<select id="ad-to"><option value="3" ${g.to === 3 ? "selected" : ""}>3 перемог</option><option value="4" ${g.to === 4 ? "selected" : ""}>4 перемог</option></select></label></div>
+  <div class="adm-row"><label>Назва групи<input id="ad-gname" value="${esc(g.name)}" list="ad-gl"><datalist id="ad-gl"><option value="${O}"><option value="${B}"><option value="Група А"><option value="Група Б"></datalist></label><label>Гра до<select id="ad-to"><option value="2" ${g.to === 2 ? "selected" : ""}>2 перемог</option><option value="3" ${g.to === 3 ? "selected" : ""}>3 перемог</option><option value="4" ${g.to === 4 ? "selected" : ""}>4 перемог</option></select></label></div>
   <p class="note" style="margin:.4rem 0">Торкайтеся гравців <b>у порядку номерів жеребкування</b>: 1-й, 2-й, 3-й… Повторне торкання прибирає гравця.</p>
   <div class="adm-chips">${all.map(p => { const n = g.draw.indexOf(p.id) + 1, inOther = !n && d.groups.some((x, i) => i !== ADM.gi && x.draw.includes(p.id)); return `<button class="chip ${n ? "on" : ""}" ${inOther ? 'style="opacity:.45"' : ""} data-act="pick" data-id="${p.id}" type="button">${n ? `<i>${n}</i>` : ""}${esc(p.name)}</button>`; }).join("")}</div>
   <div class="adm-row"><label>Новий гравець<input id="ad-nn" placeholder="Прізвище Ім’я"></label><label>Рік народж.<input id="ad-ny" inputmode="numeric" placeholder="2010"></label></div>
@@ -949,7 +954,7 @@ function admStage2(it) {
   if (has) return `<h3 style="margin-top:1.6rem">2-й етап</h3><p class="note" style="margin-top:0">Сформовано: ${it.br ? "сітка плей-оф" : it.s2 === "places" ? "стикові матчі за місцями" : "фінали за місцями"}. Результати вносяться у вкладках вище.</p><button class="chip" data-act="s2cancel" type="button">Скасувати 2-й етап</button>`;
   return `<h3 style="margin-top:1.6rem">2-й етап</h3>
   <label>Формат<select id="s2-type"><option value="pools" ${o.type === "pools" ? "selected" : ""}>Фінали за місцями (1–4, 5–8…)</option><option value="bracket" ${o.type === "bracket" ? "selected" : ""}>Сітка плей-оф</option><option value="places" ${o.type === "places" ? "selected" : ""}>Стикові матчі за місцями (2 групи)</option></select></label>
-  <div class="adm-row">${o.type !== "places" ? `<label>З кожної групи<select id="s2-k">${[1, 2, 3, 4].map(k => `<option value="${k}" ${o.k === k ? "selected" : ""}>${k}</option>`).join("")}</select></label>` : ""}<label>Гра до<select id="s2-to"><option value="3" ${o.to === 3 ? "selected" : ""}>3 перемог</option><option value="4" ${o.to === 4 ? "selected" : ""}>4 перемог</option></select></label></div>
+  <div class="adm-row">${o.type !== "places" ? `<label>З кожної групи<select id="s2-k">${[1, 2, 3, 4].map(k => `<option value="${k}" ${o.k === k ? "selected" : ""}>${k}</option>`).join("")}</select></label>` : ""}<label>Гра до<select id="s2-to"><option value="2" ${o.to === 2 ? "selected" : ""}>2 перемог</option><option value="3" ${o.to === 3 ? "selected" : ""}>3 перемог</option><option value="4" ${o.to === 4 ? "selected" : ""}>4 перемог</option></select></label></div>
   ${o.type === "pools" ? `<label class="chk"><input type="checkbox" id="s2-carry" ${o.carry ? "checked" : ""}> Зараховувати результати з групи</label>` : ""}${o.type === "bracket" ? `<label class="chk"><input type="checkbox" id="s2-third" ${o.third ? "checked" : ""}> Матч за 3 місце</label>` : ""}
   <p class="note">${o.type === "pools" ? "Перші K з кожної групи грають фінал за 1–" + "…, наступні K — другий фінал і т. д. (кожен з кожним)." : o.type === "bracket" ? "Перші K з кожної групи потрапляють у сітку навхрест (1 група — 2 місце іншої)." : "Місце k однієї групи грає з місцем k іншої: за 1–2, 3–4, 5–6…"} Склад формується за поточними таблицями груп.</p>
   <button class="btn" data-act="s2make" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700">Сформувати 2-й етап</button>`;
@@ -965,7 +970,7 @@ function admControl(it) {
     const ms = DATA.matches.filter(m => m.tid === it.id && m.t === g.name);
     body = `<details class="rd" open><summary>Таблиця: ${esc(g.name)}</summary><div style="margin:.4rem 0">${crossTable(g.name, ms, g.draw).replace(/<h3[^>]*>.*?<\/h3>/, "").replace(/<a [^>]*>(.*?)<\/a>/g, "$1")}</div></details>${admRows(it, g)}`;
   }
-  return `<h3 style="margin-top:1.2rem">${esc(it.name)} <span class="tag live">● Іде зараз</span></h3>
+  return `<h3 style="margin-top:1.2rem">${esc(it.name)} <span class="tag live">● Іде зараз</span>${it.test ? " <span class=\"tag\">пробний</span>" : ""}</h3>
   <p class="note" style="margin-top:0">Натисніть «▶ Старт», коли зустріч починається — на сайті з’явиться секундомір. Потім торкніться рядка й виберіть рахунок: час зупиниться, результат одразу побачать усі (до ~20 с).</p>${playing}
   <div class="adm-tabs">${tabs.map((n, i) => `<button class="chip ${i === ADM.tab ? "on" : ""}" data-act="ctab" data-i="${i}" type="button">${esc(n)}</button>`).join("")}</div>
   ${body}${admStage2(it)}
@@ -984,6 +989,7 @@ function admInit() {
     if (t.id === "s2-third") { o.third = t.checked; return; }
     if (!d) return;
     if (t.id === "ad-name") d.name = t.value; else if (t.id === "ad-date") d.date = t.value; else if (t.id === "ad-time") d.time = t.value;
+    else if (t.id === "ad-test") d.test = t.checked;
     else if (t.id === "ad-gname") d.groups[ADM.gi].name = t.value;
     else if (t.id === "ad-to") d.groups[ADM.gi].to = +t.value;
     else if (t.id === "ad-ann") { d.announce = t.value; const a = BASE.tournaments.find(x => x.id === t.value); if (a) { d.name = a.name; d.date = a.date; d.time = a.time || d.time; } admRender(); }
@@ -1020,7 +1026,7 @@ async function flush() {
       const item = LIVE.items.find(i => i.id === id);
       if (!item) { delete SYNC.pending[id]; continue; }
       const sent = item.u, r = await postItem(item);
-      if (r.ok) { if (SYNC.pending[id] === sent) delete SYNC.pending[id]; SYNC.ok = true; }
+      if (r.ok) { if (SYNC.pending[id] === sent) delete SYNC.pending[id]; SYNC.saved[id] = Date.now(); SYNC.ok = true; }
       else { SYNC.err = r.err; SYNC.fatal = !!r.fatal; break; }
     }
   } finally { SYNC.busy = false; }
@@ -1033,10 +1039,15 @@ function admSave(item) {
   ADM.msg = ""; applyLive(); admRender(); route(true); flush();
 }
 async function admDelete(id) {
-  delete SYNC.pending[id]; LIVE.items = LIVE.items.filter(i => i.id !== id); LIVE.key = ""; applyLive(); ADM.msg = "Видалення…"; admRender(); route(true);
-  let ok = false;
-  try { const r = await fetch(DATA.live.endpoint, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key: ADM.key, action: "delete", id }) }); const d = JSON.parse(await r.text()); ok = !!d.ok; if (d.error === "key") { ADM.msg = "Невірний ключ — турнір НЕ видалено на сервері."; admRender(); return; } } catch (x) { }
-  ADM.msg = ok ? "Видалено." : "Не вдалося підтвердити видалення на сервері — перевірте з’єднання."; admRender();
+  delete SYNC.pending[id]; delete SYNC.saved[id]; LIVE.items = LIVE.items.filter(i => i.id !== id); LIVE.key = ""; applyLive(); ADM.msg = "Видалення…"; admRender(); route(true);
+  let res = null;
+  try { const r = await fetch(DATA.live.endpoint, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ key: ADM.key, action: "delete", id }) }); res = JSON.parse(await r.text()); } catch (x) { }
+  if (res && res.error === "key") { ADM.msg = "Невірний ключ — на сервері НЕ видалено."; await fetchLive(true); admRender(); return; }
+  await sleep(900);
+  let gone = false;
+  try { const r = await fetch(DATA.live.endpoint + "?t=" + Date.now(), { cache: "no-store" }), d = await r.json(); gone = !d.items.some(i => i.id === id); } catch (x) { }
+  await fetchLive(true);
+  ADM.msg = gone ? "Видалено ✓" : "Сервер не підтвердив видалення. Натисніть «Перевірити сервер» і спробуйте ще раз."; admRender();
 }
 async function admPing() {
   const ep = DATA.live.endpoint, out = [];
@@ -1103,7 +1114,7 @@ function admAct(el) {
     const bad = d.groups.find(g => g.draw.length < 3);
     if (!d.name.trim()) ADM.msg = "Вкажіть назву турніру."; else if (bad) ADM.msg = "У групі «" + bad.name + "» має бути щонайменше 3 учасники."; else if (new Set(d.groups.map(g => g.name.trim())).size < d.groups.length) ADM.msg = "Назви груп мають відрізнятися.";
     else {
-      const used = new Set(d.groups.flatMap(g => g.draw)), item = { id: "L" + d.date.replace(/-/g, "") + (LIVE.items.length ? "-" + LIVE.items.length : ""), name: d.name.trim(), date: d.date, time: d.time, announce: d.announce, status: "live", players: d.players.filter(p => used.has(p.id)), groups: d.groups.map(g => ({ name: g.name.trim(), to: g.to, draw: g.draw, res: {}, tm: {} })) };
+      const used = new Set(d.groups.flatMap(g => g.draw)), item = { id: "L" + d.date.replace(/-/g, "") + (LIVE.items.length ? "-" + LIVE.items.length : ""), name: d.name.trim(), date: d.date, time: d.time, announce: d.announce, status: "live", test: d.test || undefined, players: d.players.filter(p => used.has(p.id)), groups: d.groups.map(g => ({ name: g.name.trim(), to: g.to, draw: g.draw, res: {}, tm: {} })) };
       ADM.draft = null; ADM.tab = 0; admSave(item); return;
     }
   }
