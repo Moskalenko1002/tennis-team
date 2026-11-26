@@ -335,7 +335,7 @@ const DATA = {
   tournaments: [
     { id: "t1", name: "TT Open #1", date: "2026-11-07", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: B, id: "lutsenko-viktor" }, { g: O, id: "shcherbakov" }] },
     { id: "t2", name: "TT Open #2", date: "2026-11-15", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "done", winners: [{ g: O, id: "shcherbakov" }], draw: { [O]: ["rohozniy", "yeremenko", "miniailo", "horbatiuk", "buhrinov-m", "buhrinov-r", "shcherbakov", "felskyi", "lunen"] } },
-    { id: "t4", name: "TT Open #4", date: "2026-11-22", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "up", info: "Дві ліги: Оранжева та Біла.<br>Запис за телефоном:<br><b style=\"white-space:nowrap\">+380 99 193 41 23</b>" },
+    { id: "t4", name: "TT Open #4", date: "2026-11-29", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "up", info: "Дві ліги: Оранжева та Біла.<br>Запис за телефоном:<br><b style=\"white-space:nowrap\">+380 99 193 41 23</b>" },
     { id: "t3", name: "TT Open #3", date: "2026-11-21", time: "12:00", place: "Запоріжжя, пр. Соборний, 150а", status: "up", info: "Дві ліги: Оранжева та Біла.<br>Запис за телефоном:<br><b style=\"white-space:nowrap\">+380 99 193 41 23</b>" }
   ],
   /* draw (у турнірі) — гравці в порядку номерів жеребкування [1], [2], [3]… Від нього залежить порядок турів (див. rrRound), а отже й підрахунок рейтингу. */
@@ -430,6 +430,7 @@ const DATA = {
     { d: "2026-11-15", a: "buhrinov-m", b: "yeremenko", sa: 3, sb: 1, tid: "t2", t: O }
   ]
 };
+const BUILD = "2026-11-21.5"; /* змінюйте при кожному оновленні: видно внизу головної, щоб розрізняти версії на різних пристроях */
 const START = 200, K = 32; /* START — стартовий рейтинг, K — наскільки сильно рейтинг змінюється після матчу */
 /* Вклад зустрічі та вага гравця — за українською рейтинговою системою (рахуються окремо, на рейтинг Elo не впливають).
    R0 — внутрішній стартовий рейтинг української шкали для першого турніру клубу, VCAP — максимум ваги за турнір, BCAP — максимум ваги у формулі. */
@@ -459,7 +460,7 @@ const rdOf = m => {
 };
 const decay = b => b > 14 ? b - (b / 15) ** 2 : b >= 1 ? b - 1 : 0; /* щомісячне зниження ваги (1-го числа) */
 const n1 = x => x == null ? "—" : x.toFixed(1).replace(".", ",");
-const ASOF = new URLSearchParams(location.search).get("asof") || new Date().toISOString().slice(0, 10); /* ?asof=2027-03-01 — переглянути, як знизиться вага */
+const ASOF = new URLSearchParams(location.search).get("asof") || new Date().toLocaleDateString("sv-SE"); /* ?asof=2027-03-01 — переглянути, як знизиться вага */
 let S, VK, P, ranked; /* S — внутрішній український рейтинг і вага; VK — вклад кожної зустрічі (для переможця); P, ranked — гравці та рейтинг */
 function calcTournament(t) {
   const ms = DATA.matches.filter(m => m.tid === t.id && !m.carry).sort((x, y) => rdOf(x) - rdOf(y));
@@ -606,7 +607,7 @@ function applyLive() {
   LIVE.items.forEach(it => {
     if (it.status === "test" || !it.groups || (it.test && !ADM.key)) return;
     (it.players || []).forEach(p => { if (!DATA.players.some(x => x.id === p.id)) DATA.players.push({ id: p.id, name: p.name, photo: "photos/" + p.id + ".jpg", group: it.groups[0] ? it.groups[0].name : O, born: p.born || undefined }); });
-    if (it.announce) DATA.tournaments = DATA.tournaments.filter(t => t.id !== it.announce);
+    if (it.announce && !it.test) DATA.tournaments = DATA.tournaments.filter(t => t.id !== it.announce);
     const t = { id: it.id, name: it.name, date: it.date, time: it.time, place: it.place || DATA.club.addr, status: it.status, live: true, draw: {}, to: {}, tm: {}, playing: [] };
     const sc = v => v.split(":").map(Number);
     it.groups.forEach(g => {
@@ -860,7 +861,8 @@ const views = {
       <div class="ct2-ph">${DATA.club.phone}</div>
       <div class="ct2-bb"><a class="hb l" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(DATA.club.addr)}" target="_blank" rel="noopener">Маршрут</a><a class="hb o" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Подзвонити</a></div>
     </div>
-    <a class="lb" href="#p-${ranked[0].id}">${av(ranked[0])}<div><small>ЛІДЕР РЕЙТИНГУ</small><b>${ranked[0].name}</b><span>${Math.round(ranked[0].r)} очок →</span></div></a>`;
+    <a class="lb" href="#p-${ranked[0].id}">${av(ranked[0])}<div><small>ЛІДЕР РЕЙТИНГУ</small><b>${ranked[0].name}</b><span>${Math.round(ranked[0].r)} очок →</span></div></a>
+    <p class="note" style="text-align:center;margin:1.2rem 0 0">Версія сайту ${BUILD}</p>`;
   },
   schedule: () => `
     <h2>Тренування</h2><p class="sub">Запис на пробне заняття — за телефоном або в Instagram.</p>
@@ -945,10 +947,11 @@ function admHtml() {
   const keyBox = `<div class="adm-k"><label>Ключ доступу<input type="password" id="adk" value="${esc(ADM.key)}" autocomplete="off"></label><button class="btn" data-act="key" type="button">Запам’ятати ключ</button> <button class="chip" data-act="ping" type="button">Перевірити сервер</button></div>`;
   const pend = Object.keys(SYNC.pending).length, sync = SYNC.err ? `<p class="adm-msg" style="border-color:#D64545" role="alert">⚠ Не збережено на сервері: ${esc(SYNC.err)}. ${SYNC.fatal ? "Перевірте ключ угорі й натисніть «Повторити»." : "Повторюю автоматично."} <button class="chip" data-act="retry" type="button">Повторити</button></p>` : pend ? `<p class="adm-msg" role="status">Збереження…</p>` : SYNC.ok ? `<p class="adm-msg" role="status">Збережено ✓</p>` : "";
   const msg = sync + (ADM.msg ? `<p class="adm-msg" role="status">${esc(ADM.msg)}</p>` : "") + (ADM.diag ? `<pre class="su-msg">${esc(ADM.diag)}</pre>` : "");
+  const cnt = `<details class="rd"><summary>Лічильники сайту</summary><p class="note" style="margin:.2rem 0 .6rem">Матчів у базі сайту: <b>${BASE.matches.length}</b><br>З турнірів наживо (бачать усі): <b>${DATA.matches.filter(m => !m.carry && LIVE.items.some(i => i.id === m.tid && !i.test)).length}</b><br>З пробних (бачите лише ви): <b>${DATA.matches.filter(m => !m.carry && LIVE.items.some(i => i.id === m.tid && i.test)).length}</b><br>На головній у плитці «матчів»: <b>${DATA.matches.filter(m => !m.carry).length}</b></p></details>`;
   const lv = admLive();
-  if (lv) return keyBox + msg + admControl(lv) + admAllList();
+  if (lv) return keyBox + msg + cnt + admControl(lv) + admAllList();
   if (!ADM.draft) { ADM.draft = admNewDraft(); ADM.gi = 0; }
-  return keyBox + msg + admStart() + admAllList();
+  return keyBox + msg + cnt + admStart() + admAllList();
 }
 function admAllList() {
   const all = LIVE.items;
