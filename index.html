@@ -278,6 +278,7 @@ a.rk,.sr{text-decoration:none;color:inherit}
 .chip.st{min-height:34px;font-size:.85rem}
 #adm .chk{display:flex;align-items:center;gap:.5rem}
 #adm .chk input{width:auto;min-height:auto}
+#adm textarea{width:100%;padding:.6rem .8rem;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;box-sizing:border-box}
 </style>
 </head>
 <body>
@@ -430,7 +431,7 @@ const DATA = {
     { d: "2026-11-15", a: "buhrinov-m", b: "yeremenko", sa: 3, sb: 1, tid: "t2", t: O }
   ]
 };
-const BUILD = "2026-11-21.5"; /* змінюйте при кожному оновленні: видно внизу головної, щоб розрізняти версії на різних пристроях */
+const BUILD = "2026-11-25.1"; /* змінюйте при кожному оновленні: видно внизу головної, щоб розрізняти версії на різних пристроях */
 const START = 200, K = 32; /* START — стартовий рейтинг, K — наскільки сильно рейтинг змінюється після матчу */
 /* Вклад зустрічі та вага гравця — за українською рейтинговою системою (рахуються окремо, на рейтинг Elo не впливають).
    R0 — внутрішній стартовий рейтинг української шкали для першого турніру клубу, VCAP — максимум ваги за турнір, BCAP — максимум ваги у формулі. */
@@ -605,7 +606,7 @@ function cbHtml(t) {
 function applyLive() {
   DATA.players = BASE.players.slice(); DATA.tournaments = BASE.tournaments.slice(); DATA.matches = BASE.matches.slice();
   LIVE.items.forEach(it => {
-    if (it.status === "test" || !it.groups || (it.test && !ADM.key)) return;
+    if (it.status === "test" || it.status === "deleted" || !it.groups || (it.test && !ADM.key)) return;
     (it.players || []).forEach(p => { if (!DATA.players.some(x => x.id === p.id)) DATA.players.push({ id: p.id, name: p.name, photo: "photos/" + p.id + ".jpg", group: it.groups[0] ? it.groups[0].name : O, born: p.born || undefined }); });
     if (it.announce && !it.test) DATA.tournaments = DATA.tournaments.filter(t => t.id !== it.announce);
     const t = { id: it.id, name: it.name, date: it.date, time: it.time, place: it.place || DATA.club.addr, status: it.status, live: true, draw: {}, to: {}, tm: {}, playing: [] };
@@ -667,7 +668,7 @@ async function fetchLive(force, again) {
     LIVE.at = new Date();
     const missing = LIVE.items.some(i => !merged.some(x => x.id === i.id));
     if (!force && missing && !again) { await new Promise(r => setTimeout(r, 1500)); return fetchLive(false, true); }
-    if (force || key !== LIVE.key) { LIVE.items = merged; LIVE.key = key; applyLive(); route(true); }
+    if (force || key !== LIVE.key) { LIVE.items = merged; LIVE.key = key; applyLive(); snapBackup(); route(true); }
     stamp();
     return true;
   } catch (e) { return false; }
@@ -876,7 +877,7 @@ const views = {
     <p><a class="btn" href="tel:${DATA.club.phone.replace(/\s/g, "")}">Забронювати стіл</a></p>`,
   tournaments: () => `
     <h2>Турніри</h2><p class="sub">Результати йдуть у рейтинг гравців. Натисніть на завершений турнір, щоб побачити результати.</p>
-    <div class="grid">${[...DATA.tournaments].sort((x, y) => ({ live: 0, up: 1 }[x.status] ?? 2) - ({ live: 0, up: 1 }[y.status] ?? 2) || (x.status === "up" ? x.date.localeCompare(y.date) : y.date.localeCompare(x.date))).map(t => {
+    <div class="grid">${DATA.tournaments.filter(t => t.status !== "up" || t.date >= ASOF).sort((x, y) => ({ live: 0, up: 1 }[x.status] ?? 2) - ({ live: 0, up: 1 }[y.status] ?? 2) || (x.status === "up" ? x.date.localeCompare(y.date) : y.date.localeCompare(x.date))).map(t => {
       const link = t.id && (t.status === "done" || t.status === "live");
       return `<${link ? `a href="#t-${t.id}"` : "div"} class="card"><span class="tag ${t.status}">${t.status === "up" ? "Незабаром" : t.status === "live" ? "● Іде зараз" : "Завершено"}</span>
       <h3 style="margin-top:.5rem">${t.name}</h3>${fmt(t.date)}${t.time ? " о " + t.time : ""}${t.place ? "<br>" + t.place : ""}
@@ -948,14 +949,31 @@ function admHtml() {
   const pend = Object.keys(SYNC.pending).length, sync = SYNC.err ? `<p class="adm-msg" style="border-color:#D64545" role="alert">⚠ Не збережено на сервері: ${esc(SYNC.err)}. ${SYNC.fatal ? "Перевірте ключ угорі й натисніть «Повторити»." : "Повторюю автоматично."} <button class="chip" data-act="retry" type="button">Повторити</button></p>` : pend ? `<p class="adm-msg" role="status">Збереження…</p>` : SYNC.ok ? `<p class="adm-msg" role="status">Збережено ✓</p>` : "";
   const msg = sync + (ADM.msg ? `<p class="adm-msg" role="status">${esc(ADM.msg)}</p>` : "") + (ADM.diag ? `<pre class="su-msg">${esc(ADM.diag)}</pre>` : "");
   const cnt = `<details class="rd"><summary>Лічильники сайту</summary><p class="note" style="margin:.2rem 0 .6rem">Матчів у базі сайту: <b>${BASE.matches.length}</b><br>З турнірів наживо (бачать усі): <b>${DATA.matches.filter(m => !m.carry && LIVE.items.some(i => i.id === m.tid && !i.test)).length}</b><br>З пробних (бачите лише ви): <b>${DATA.matches.filter(m => !m.carry && LIVE.items.some(i => i.id === m.tid && i.test)).length}</b><br>На головній у плитці «матчів»: <b>${DATA.matches.filter(m => !m.carry).length}</b></p></details>`;
-  const lv = admLive();
-  if (lv) return keyBox + msg + cnt + admControl(lv) + admAllList();
+  const lv = admLive(), bk = admBackups();
+  if (lv) return keyBox + msg + cnt + bk + admControl(lv) + admAllList();
   if (!ADM.draft) { ADM.draft = admNewDraft(); ADM.gi = 0; }
-  return keyBox + msg + cnt + admStart() + admAllList();
+  return keyBox + msg + cnt + bk + admStart() + admAllList();
 }
 function admAllList() {
-  const all = LIVE.items;
-  return all.length ? `<h3 style="margin-top:1.8rem">Усі турніри на сервері</h3><p class="note" style="margin-top:0">Тут можна видалити будь-який, навіть пробний чи зайвий.</p>${all.map(i => `<div class="rr"><span>${esc(i.name || i.id)} · ${i.date ? sd(i.date) : ""} · ${i.status === "live" ? "іде" : i.status === "done" ? "завершено" : esc(i.status || "?")}${i.test ? " · пробний" : ""}</span><span>${i.status === "done" ? `<button class="chip" data-act="reopen" data-id="${i.id}" type="button">Відкрити</button> ` : ""}<button class="chip" data-act="del" data-id="${i.id}" type="button">Видалити</button></span></div>`).join("")}` : "";
+  const act = LIVE.items.filter(i => i.status !== "deleted"), tr = LIVE.items.filter(i => i.status === "deleted");
+  const nm = i => esc(i.name || i.id) + " · " + (i.date ? sd(i.date) : "");
+  let h = "";
+  if (act.length) h += `<h3 style="margin-top:1.8rem">Усі турніри на сервері</h3><p class="note" style="margin-top:0">«У кошик» ховає турнір з сайту, але його можна відновити.</p>${act.map(i => `<div class="rr"><span>${nm(i)} · ${i.status === "live" ? "іде" : i.status === "done" ? "завершено" : esc(i.status || "?")}${i.test ? " · пробний" : ""}</span><span>${i.status === "done" ? `<button class="chip" data-act="reopen" data-id="${i.id}" type="button">Відкрити</button> ` : ""}<button class="chip" data-act="trash" data-id="${i.id}" type="button">У кошик</button></span></div>`).join("")}`;
+  if (tr.length) h += `<h3 style="margin-top:1.8rem">Кошик</h3>${tr.map(i => `<div class="rr"><span>${nm(i)}</span><span><button class="chip" data-act="restore" data-id="${i.id}" type="button">Відновити</button> <button class="chip" data-act="del" data-id="${i.id}" type="button">Видалити назавжди</button></span></div>`).join("")}`;
+  return h;
+}
+function admRestoreItems(arr) {
+  const miss = arr.filter(i => i && i.id && i.groups && !LIVE.items.some(x => x.id === i.id));
+  miss.forEach(i => { const it = admClone(i); if (it.status === "deleted") { it.status = it.prev || "done"; delete it.prev; delete it.delAt; } admSave(it); });
+  return miss.length ? "Відновлено турнірів: " + miss.length + "." : "Усі турніри з копії вже є на сервері.";
+}
+function admBackups() {
+  let list = []; try { list = JSON.parse(localStorage.getItem("ttbackups") || "[]"); } catch (x) { }
+  return `<details class="rd"><summary>Резервні копії</summary>
+    <p class="note" style="margin:.2rem 0 .6rem">Копії зберігаються на цьому пристрої автоматично (коли ви ввійшли з ключем). Відновлюються лише турніри, яких зараз немає на сервері.</p>
+    ${list.length ? list.map((b, i) => `<div class="rr"><span>${new Date(b.at).toLocaleString("uk-UA")} · турнірів: ${b.items.length}</span><button class="chip" data-act="bkrestore" data-i="${i}" type="button">Відновити</button></div>`).join("") : `<p class="note">Поки що копій немає: вони з’являться після входу з ключем.</p>`}
+    <div class="adm-chips"><button class="chip" data-act="bkcopy" type="button">Скопіювати копію всіх турнірів</button></div>
+    <label>Відновити з тексту копії<textarea id="ad-bk" rows="3"></textarea></label><button class="chip" data-act="bkpaste" type="button">Відновити з тексту</button></details>`;
 }
 function admDone() {
   const d = LIVE.items.filter(i => i.status === "done");
@@ -963,7 +981,7 @@ function admDone() {
 }
 function admStart() {
   if (ADM.gi >= ADM.draft.groups.length) ADM.gi = 0;
-  const d = ADM.draft, ups = BASE.tournaments.filter(t => t.status === "up"), g = d.groups[ADM.gi] || d.groups[0], all = admAll().concat(d.players);
+  const d = ADM.draft, ups = BASE.tournaments.filter(t => t.status === "up" && t.date >= ASOF), g = d.groups[ADM.gi] || d.groups[0], all = admAll().concat(d.players);
   return `<h3 style="margin-top:1.2rem">Почати турнір</h3>
   <label>Анонсований турнір<select id="ad-ann"><option value="">— інший —</option>${ups.map(t => `<option value="${t.id}" ${d.announce === t.id ? "selected" : ""}>${esc(t.name)} · ${sd(t.date)}</option>`).join("")}</select></label>
   <label>Назва<input id="ad-name" value="${esc(d.name)}" placeholder="TT Open #3"></label>
@@ -1043,7 +1061,7 @@ function admControl(it) {
   <p class="note" style="margin-top:0">Натисніть «▶ Старт», коли зустріч починається — на сайті з’явиться секундомір. Потім торкніться рядка й виберіть рахунок: час зупиниться, результат одразу побачать усі (до ~20 с).</p>${playing}
   <div class="adm-tabs">${tabs.map((n, i) => `<button class="chip ${i === ADM.tab ? "on" : ""}" data-act="ctab" data-i="${i}" type="button">${esc(n)}</button>`).join("")}</div>
   ${body}${admStage2(it)}
-  <p style="margin-top:1.4rem"><button class="btn" data-act="finish" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700">Завершити турнір</button> <button class="chip" data-act="del" data-id="${it.id}" type="button">Видалити турнір</button></p>`;
+  <p style="margin-top:1.4rem"><button class="btn" data-act="finish" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700">Завершити турнір</button> <button class="chip" data-act="trash" data-id="${it.id}" type="button">У кошик</button></p>`;
 }
 function admRender() { const b = document.getElementById("adm"); if (b) b.innerHTML = admHtml(); }
 function admInit() {
@@ -1065,6 +1083,15 @@ function admInit() {
     else if (t.id === "ad-ann") { d.announce = t.value; const a = BASE.tournaments.find(x => x.id === t.value); if (a) { d.name = a.name; d.date = a.date; d.time = a.time || d.time; } admRender(); }
   });
   b.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if (el) admAct(el); });
+}
+function snapBackup() {
+  if (!ADM.key || !LIVE.items.length) return;
+  try {
+    const list = JSON.parse(localStorage.getItem("ttbackups") || "[]"), key = JSON.stringify(LIVE.items.map(i => [i.id, i.u, i.status]));
+    if (list.length && list[0].key === key) return;
+    list.unshift({ at: Date.now(), key, items: LIVE.items });
+    localStorage.setItem("ttbackups", JSON.stringify(list.slice(0, 8)));
+  } catch (x) { }
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function postItem(item) {
@@ -1106,7 +1133,7 @@ async function flush() {
 function admSave(item) {
   item.u = Date.now();
   LIVE.items = [...LIVE.items.filter(i => i.id !== item.id), item]; LIVE.key = ""; SYNC.pending[item.id] = item.u;
-  ADM.msg = ""; applyLive(); admRender(); route(true); flush();
+  ADM.msg = ""; applyLive(); snapBackup(); admRender(); route(true); flush();
 }
 async function admDelete(id) {
   delete SYNC.pending[id]; delete SYNC.saved[id]; LIVE.items = LIVE.items.filter(i => i.id !== id); LIVE.key = ""; applyLive(); ADM.msg = "Видалення…"; admRender(); route(true);
@@ -1213,7 +1240,12 @@ function admAct(el) {
   else if (a === "s2cancel") { if (confirm("Скасувати 2-й етап? Його результати буде видалено.")) { const it = admClone(lv); it.groups = it.groups.filter(g => !g.stage); delete it.br; delete it.cb; delete it.s2; ADM.tab = 0; admSave(it); } return; }
   else if (a === "finish") { if (confirm("Завершити турнір? Результати залишаться на сайті, рейтинг уже враховано.")) { const it = admClone(lv); it.status = "done"; admSave(it); } return; }
   else if (a === "reopen") { const it = admClone(LIVE.items.find(i => i.id === el.dataset.id)); it.status = "live"; ADM.tab = 0; admSave(it); return; }
-  else if (a === "del") { if (confirm("Видалити турнір повністю? Це не можна скасувати.")) admDelete(el.dataset.id); return; }
+  else if (a === "trash") { const it0 = LIVE.items.find(i => i.id === el.dataset.id); if (it0 && confirm("Перенести турнір «" + (it0.name || it0.id) + "» у кошик? Його можна буде відновити.")) { const it = admClone(it0); it.prev = it.status; it.status = "deleted"; it.delAt = nowS(); ADM.tab = 0; admSave(it); } return; }
+  else if (a === "restore") { const it0 = LIVE.items.find(i => i.id === el.dataset.id); if (it0) { const it = admClone(it0); it.status = it.prev || "done"; delete it.prev; delete it.delAt; admSave(it); } return; }
+  else if (a === "del") { if (confirm("Видалити турнір НАЗАВЖДИ? Відновити його буде неможливо.") && confirm("Ви справді впевнені? Безпечніше використати «У кошик».")) admDelete(el.dataset.id); return; }
+  else if (a === "bkcopy") { const t = JSON.stringify({ v: 1, at: Date.now(), items: LIVE.items }); try { navigator.clipboard.writeText(t); ADM.msg = "Копію скопійовано (" + LIVE.items.length + " турнірів). Збережіть її в нотатках."; } catch (x) { ADM.msg = "Не вдалося скопіювати."; } }
+  else if (a === "bkrestore") { let list = []; try { list = JSON.parse(localStorage.getItem("ttbackups") || "[]"); } catch (x) { } const b0 = list[+el.dataset.i]; ADM.msg = admRestoreItems(b0 ? b0.items : []); }
+  else if (a === "bkpaste") { try { const j = JSON.parse(document.getElementById("ad-bk").value), arr = Array.isArray(j) ? j : j.items; ADM.msg = admRestoreItems(arr || []); } catch (x) { ADM.msg = "Текст копії не розпізнано."; } }
   admRender();
 }
 views.admin = () => `<h2>Керування турніром</h2><div id="adm"></div>`;
